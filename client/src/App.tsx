@@ -1,11 +1,11 @@
-import './App.css'
-import Routes from './Routes'
+import DashLayout from './layouts/DashLayout'
+import Routes from './routes'
 
 function App() {
   return (
-    <>
+    <DashLayout>
      <Routes />
-    </>
+    </DashLayout>
   )
 }
 
