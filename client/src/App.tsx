@@ -1,11 +1,11 @@
-import DashLayout from './layouts/DashLayout'
+import DashboardLayout from './components/layout/DashboardLayout'
 import Routes from './routes'
 
 function App() {
   return (
-    <DashLayout>
+    <DashboardLayout>
      <Routes />
-    </DashLayout>
+    </DashboardLayout>
   )
 }
 
