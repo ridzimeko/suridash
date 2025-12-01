@@ -1,0 +1,113 @@
+import {
+  pgTable,
+  serial,
+  varchar,
+  integer,
+  boolean,
+  timestamp,
+  jsonb,
+  index,
+} from "drizzle-orm/pg-core";
+
+// 🔹 Riwayat alert penting (bukan semua alert realtime harus disimpan)
+export const alerts = pgTable(
+  "alerts",
+  {
+    id: serial("id").primaryKey(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+
+    // Info IP & koneksi
+    srcIp: varchar("src_ip", { length: 45 }).notNull(),
+    srcPort: integer("src_port"),
+    destIp: varchar("dest_ip", { length: 45 }),
+    destPort: integer("dest_port"),
+    protocol: varchar("protocol", { length: 10 }),
+
+    // Info Suricata alert
+    signatureId: integer("signature_id"),
+    signature: varchar("signature", { length: 512 }),
+    category: varchar("category", { length: 256 }),
+    severity: integer("severity"), // 1 (high) - 3 (low)
+
+    // Info GeoIP (kalau kamu simpan)
+    country: varchar("country", { length: 2 }),
+    city: varchar("city", { length: 128 }),
+    latitude: varchar("latitude", { length: 32 }),
+    longitude: varchar("longitude", { length: 32 }),
+
+    // Flag apakah IP ini sempat diblok
+    wasBlocked: boolean("was_blocked").default(false).notNull(),
+
+    // Raw JSON dari Suricata event (opsional tapi berguna)
+    raw: jsonb("raw"),
+  },
+  (table) => ({
+    idxCreatedAt: index("idx_alerts_created_at").on(table.createdAt),
+    idxSrcIp: index("idx_alerts_src_ip").on(table.srcIp),
+    idxSeverity: index("idx_alerts_severity").on(table.severity),
+  }),
+);
+
+// 🔹 Riwayat IP yang diblokir firewall
+export const blockedIps = pgTable(
+  "blocked_ips",
+  {
+    id: serial("id").primaryKey(),
+    ip: varchar("ip", { length: 45 }).notNull(),
+
+    reason: varchar("reason", { length: 512 }), // misal: "SSH brute force", "port scan"
+    attackType: varchar("attack_type", { length: 128 }), // kategori yang kamu pakai di UI
+
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    blockedUntil: timestamp("blocked_until", { withTimezone: true }),
+    isActive: boolean("is_active").default(true).notNull(),
+
+    // Sumber rule block (firewalld / iptables)
+    source: varchar("source", { length: 32 }).default("firewalld"),
+
+    // Jika kamu ingin tahu apakah auto-block atau manual admin
+    autoBlocked: boolean("auto_blocked").default(true).notNull(),
+
+    // optional: relasi ke user admin (Better Auth user)
+    // userId: varchar("user_id", { length: 255 }), // nanti bisa refer ke auth.users.id
+  },
+  (table) => ({
+    idxBlockedIp: index("idx_blocked_ips_ip").on(table.ip),
+    idxBlockedActive: index("idx_blocked_ips_active").on(table.isActive),
+  }),
+);
+
+// 🔹 Rules custom yang di-edit dari dashboard
+export const suricataRules = pgTable("suricata_rules", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: varchar("description", { length: 1024 }),
+
+  // isi rule Suricata lengkap
+  ruleText: varchar("rule_text", { length: 4096 }).notNull(),
+
+  enabled: boolean("enabled").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+
+  // optional: userId untuk tahu siapa yang bikin/edit
+  // createdBy: varchar("created_by", { length: 255 }),
+});
+
+// 🔹 Log service suricata / backend untuk ditampilkan di System Logs
+export const systemLogs = pgTable("system_logs", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  level: varchar("level", { length: 16 }).default("info").notNull(), // info/warn/error
+  source: varchar("source", { length: 64 }).default("backend").notNull(), // suricata/backend/firewall
+  message: varchar("message", { length: 1024 }).notNull(),
+  meta: jsonb("meta"), // detail tambahan (objek JSON)
+});
