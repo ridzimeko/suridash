@@ -5,6 +5,9 @@ import { Cpu, HardDrive, Network } from 'lucide-react';
 interface ResourceMonitorProps {
   cpu: number;
   memory: number;
+  totalRam: number;
+  usedRam: number;
+  freeRam: number;
   networkIn: number;
   networkOut: number;
 }
@@ -12,6 +15,9 @@ interface ResourceMonitorProps {
 export default function ResourceMonitor({
   cpu,
   memory,
+  totalRam,
+  usedRam,
+  freeRam,
   networkIn,
   networkOut,
 }: ResourceMonitorProps) {
@@ -41,6 +47,12 @@ export default function ResourceMonitor({
             <span className="text-sm font-bold">{memory}%</span>
           </div>
           <Progress value={memory} className="h-2" />
+
+           <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Total: {totalRam} GB</span>
+            <span>Used: {usedRam} GB</span>
+            <span>Free: {freeRam} GB</span>
+          </div>
         </div>
 
         <div className="space-y-2">

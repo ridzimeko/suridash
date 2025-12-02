@@ -6,6 +6,7 @@ import type { AppEnv } from './types';
 import { cors } from 'hono/cors';
 import { analyticsRoute } from './routes/analytics';
 import { integrationsRoute } from './routes/integrations';
+import { systemRoute } from './routes/system';
 
 const app = new Hono<AppEnv>({
   strict: false,
@@ -15,7 +16,7 @@ const app = new Hono<AppEnv>({
 //   return c.text('Hello Hono!')
 // })
 
-const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute] as const;
+const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute] as const;
 
 app.use(
   "/api/*",

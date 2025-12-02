@@ -26,6 +26,9 @@ importers:
       hono:
         specifier: ^4.10.7
         version: 4.10.7
+      systeminformation:
+        specifier: ^5.27.11
+        version: 5.27.11
     devDependencies:
       '@types/node':
         specifier: ^20.11.17
@@ -631,6 +634,12 @@ packages:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
 
+  systeminformation@5.27.11:
+    resolution: {integrity: sha512-K3Lto/2m3K2twmKHdgx5B+0in9qhXK4YnoT9rIlgwN/4v7OV5c8IjbeAUkuky/6VzCQC7iKCAqi8rZathCdjHg==}
+    engines: {node: '>=8.0.0'}
+    os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
+    hasBin: true
+
   tsx@4.20.6:
     resolution: {integrity: sha512-ytQKuwgmrrkDTFP4LjR0ToE2nqgy886GpvRSpU0JAnrdBYppuY5rLkRUYPU1yCryb24SsKBTL/hlDQAEFVwtZg==}
     engines: {node: '>=18.0.0'}
@@ -1021,6 +1030,8 @@ snapshots:
       source-map: 0.6.1
 
   source-map@0.6.1: {}
+
+  systeminformation@5.27.11: {}
 
   tsx@4.20.6:
     dependencies:

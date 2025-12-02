@@ -1,14 +1,14 @@
-import { useState } from 'react';
 import MetricCard from '@/components/dashboard/MetricCard';
 import ResourceMonitor from '@/components/dashboard/ResourceMonitor';
 import ServiceStatus from '@/components/dashboard/ServiceStatus';
 import QuickStats from '@/components/dashboard/QuickStats';
-import { mockSystemStats, mockAlerts } from '@/lib/mockData';
+import { mockAlerts } from '@/lib/mockData';
 import { Bell, Shield, FileCode, Activity } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSystemStats } from '@/hooks/use-system-stats';
 
 export default function Index() {
-  const [stats] = useState(mockSystemStats);
+  const stats = useSystemStats(3000); // update setiap 3 detik
 
   const handleStart = () => {
     toast.success('Suricata service started successfully');
@@ -34,24 +34,24 @@ export default function Index() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Total Alerts"
-            value={stats.totalAlerts.toLocaleString()}
+            value={890}
             icon={Bell}
             trend={{ value: 12, isPositive: false }}
           />
           <MetricCard
             title="Blocked IPs"
-            value={stats.blockedIPs}
+            value={112}
             icon={Shield}
             trend={{ value: 8, isPositive: true }}
           />
           <MetricCard
             title="Active Rules"
-            value={stats.activeRules.toLocaleString()}
+            value={256}
             icon={FileCode}
           />
           <MetricCard
             title="Service Status"
-            value={stats.serviceStatus}
+            value={"Running"}
             icon={Activity}
             className="capitalize"
           />
@@ -63,9 +63,12 @@ export default function Index() {
             memory={stats.memory}
             networkIn={stats.networkIn}
             networkOut={stats.networkOut}
+            totalRam={stats.totalRam}
+            usedRam={stats.usedRam}
+            freeRam={stats.freeRam}
           />
           <ServiceStatus
-            status={stats.serviceStatus}
+            status={"running"}
             onStart={handleStart}
             onStop={handleStop}
             onRestart={handleRestart}
