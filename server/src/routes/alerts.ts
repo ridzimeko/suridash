@@ -3,8 +3,11 @@ import { db } from "@/db";
 import { alerts } from "@/db/schema/dashboard-schema";
 import { asc, desc, and, eq, sql } from "drizzle-orm";
 import type { AppEnv } from "@/types";
+import { authMiddleware } from "@/middlewares/auth-middleware";
 
 export const alertsRoute = new Hono<AppEnv>();
+
+alertsRoute.use("/alerts/*", authMiddleware);
 
 // PATH AUTOMATIS JADI: /api/alerts
 alertsRoute.get("/alerts", async (c) => {

@@ -1,8 +1,19 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import Sidebar from "@/components/layout/Sidebar"
-import { Outlet } from "react-router"
+import { Navigate, Outlet } from "react-router"
+import { useAuth } from "@/hooks/use-auth";
 
 export default function DashboardLayout(): React.ReactElement {
+    const { user, loading } = useAuth();
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
     return (
         <SidebarProvider>
             <Sidebar />

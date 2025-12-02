@@ -7,9 +7,17 @@ export const auth = betterAuth({
         provider: "pg", // or "mysql", "sqlite"
     }),
   // Allow requests from the frontend development server
-  trustedOrigins: ['http://localhost:5173'],
+  trustedOrigins: [process.env.ORIGIN_URL as string],
   emailAndPassword: {
     enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      partitioned: true,
+      httpOnly: false
+    }
   },
   socialProviders: {
     github: {
