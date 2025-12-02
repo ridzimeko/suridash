@@ -33,7 +33,7 @@ export default function Sidebar() {
       <div className="flex h-16 items-center gap-2 border-b px-6">
         <Activity className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-xl font-bold text-primary">Suricata</h1>
+          <h1 className="text-xl font-bold text-primary">SuriDash</h1>
           <p className="text-xs text-muted-foreground">IDS/IPS Dashboard</p>
         </div>
       </div>

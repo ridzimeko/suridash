@@ -1,9 +1,14 @@
+import { Activity } from "lucide-react";
+
 export default function LoginPage(): React.ReactElement {
     return (
         <main className="w-full h-screen flex flex-col items-center justify-center px-4">
             <div className="max-w-sm w-full text-gray-600">
                 <div className="text-center">
-                    <img src="https://floatui.com/logo.svg" width={150} className="mx-auto" />
+                    <div className="flex justify-center items-center gap-2 px-6">
+                        <Activity className="h-8 w-8 text-primary" />
+                        <h1 className="text-xl font-bold text-primary">SuriDash</h1>
+                    </div>
                     <div className="mt-5 space-y-2">
                         <h3 className="text-gray-800 text-2xl font-bold sm:text-3xl">Log in to your account</h3>
                         <p className="">Don't have an account? <a href="javascript:void(0)" className="font-medium text-indigo-600 hover:text-indigo-500">Sign up</a></p>
