@@ -1,9 +1,10 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import auth from "@/routes/auth";
-import type { AuthType } from './lib/auth';
+import { alertsRoute } from './routes/alerts';
+import type { AppEnv } from './types';
 
-const app = new Hono<{ Variables: AuthType }>({
+const app = new Hono<AppEnv>({
   strict: false,
 });
 
@@ -11,10 +12,10 @@ const app = new Hono<{ Variables: AuthType }>({
 //   return c.text('Hello Hono!')
 // })
 
-const routes = [auth] as const;
+const routes = [auth, alertsRoute] as const;
 
 routes.forEach((route) => {
-  app.basePath("/api").route("/", route);
+  app.route("/api", route);
 });
 
 serve({
