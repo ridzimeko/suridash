@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import Sidebar from "@/components/layout/Sidebar"
 import { Navigate, Outlet } from "react-router"
 import { useAuth } from "@/hooks/use-auth";
+import { Toaster } from "sonner";
 
 export default function DashboardLayout(): React.ReactElement {
     const { user, loading } = useAuth();
@@ -21,6 +22,7 @@ export default function DashboardLayout(): React.ReactElement {
                 <SidebarTrigger />
                 <Outlet />
             </main>
+            <Toaster position="bottom-right" />
         </SidebarProvider>
     )
 }

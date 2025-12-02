@@ -1,219 +1,263 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, MessageCircle, Save, TestTube } from 'lucide-react';
+import { Mail, Send, Save, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { getIntegrations, saveIntegration, testIntegration } from "@/services/integration";
+
 export default function Integration() {
-    const handleSave = () => {
-        toast.success('Integration settings saved successfully');
-    };
+  const [emailConfig, setEmailConfig] = useState({
+    enabled: false,
+    config: {
+      apiKey: "",
+      fromEmail: "",
+      fromName: "",
+      toEmail: "",
+    }
+  });
 
-    const handleTest = (platform: string) => {
-        toast.success(`Test notification sent via ${platform}`);
-    };
+  const [telegramConfig, setTelegramConfig] = useState({
+    enabled: false,
+    config: {
+      bot_token: "",
+      chat_id: "",
+    }
+  });
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold">Integration</h1>
-                <p className="text-muted-foreground">
-                    Configure notification channels for alerts
-                </p>
-            </div>
+  const [emailId, setEmailId] = useState<number | null>(null);
+  const [telegramId, setTelegramId] = useState<number | null>(null);
 
-            <Tabs defaultValue="email" className="space-y-6">
-                <TabsList>
-                    <TabsTrigger value="email">
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email
-                    </TabsTrigger>
-                    <TabsTrigger value="telegram">
-                        <Send className="mr-2 h-4 w-4" />
-                        Telegram
-                    </TabsTrigger>
-                    <TabsTrigger value="whatsapp">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        WhatsApp
-                    </TabsTrigger>
-                </TabsList>
+  /* ----------------------------------------------
+     LOAD CONFIG FROM DATABASE
+  ------------------------------------------------*/
+  useEffect(() => {
+    getIntegrations().then((data: any[]) => {
+      data.forEach((row) => {
+        if (row.provider === "brevo") {
+          setEmailId(row.id);
+          setEmailConfig({
+            enabled: row.enabled,
+            config: row.config,
+          });
+        }
 
-                <TabsContent value="email" className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Email Configuration</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>Enable Email Notifications</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Send alerts via email
-                                    </p>
-                                </div>
-                                <Switch defaultChecked />
-                            </div>
+        if (row.provider === "telegram") {
+          setTelegramId(row.id);
+          setTelegramConfig({
+            enabled: row.enabled,
+            config: row.config,
+          });
+        }
+      });
+    });
+  }, []);
 
-                            <div className="space-y-2">
-                                <Label>SMTP Server</Label>
-                                <Input placeholder="smtp.gmail.com" />
-                            </div>
+  /* ----------------------------------------------
+      SAVE CONFIG
+  ------------------------------------------------*/
+  const handleSave = async () => {
+    try {
+      await saveIntegration(
+        "brevo",
+        emailConfig.config,
+        emailConfig.enabled,
+        emailId ?? undefined
+      );
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label>SMTP Port</Label>
-                                    <Input type="number" placeholder="587" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Encryption</Label>
-                                    <Input placeholder="TLS" />
-                                </div>
-                            </div>
+      await saveIntegration(
+        "telegram",
+        telegramConfig.config,
+        telegramConfig.enabled,
+        telegramId ?? undefined
+      );
 
-                            <div className="space-y-2">
-                                <Label>Username</Label>
-                                <Input type="email" placeholder="your-email@example.com" />
-                            </div>
+      toast.success("Settings saved!");
+    } catch (err) {
+      toast.error("Failed to save settings");
+    }
+  };
 
-                            <div className="space-y-2">
-                                <Label>Password</Label>
-                                <Input type="password" placeholder="••••••••" />
-                            </div>
+  /* ----------------------------------------------
+      TEST CONNECTION
+  ------------------------------------------------*/
+  const handleTest = async (provider: string) => {
+    toast.loading("Testing...");
 
-                            <div className="space-y-2">
-                                <Label>From Address</Label>
-                                <Input type="email" placeholder="suricata@example.com" />
-                            </div>
+    try {
+      const res = await testIntegration(provider);
+      toast.dismiss();
+      toast.success(res.message ?? "Test success!");
+    } catch {
+      toast.dismiss();
+      toast.error("Test failed.");
+    }
+  };
 
-                            <div className="space-y-2">
-                                <Label>To Address (comma separated)</Label>
-                                <Input placeholder="admin@example.com, security@example.com" />
-                            </div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Integration</h1>
+        <p className="text-muted-foreground">
+          Configure notification channels for alerts
+        </p>
+      </div>
 
-                            <div className="flex gap-2">
-                                <Button onClick={() => handleTest('Email')}>
-                                    <TestTube className="mr-2 h-4 w-4" />
-                                    Test Connection
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+      <Tabs defaultValue="email" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="email">
+            <Mail className="mr-2 h-4 w-4" />
+            Email
+          </TabsTrigger>
+          <TabsTrigger value="telegram">
+            <Send className="mr-2 h-4 w-4" />
+            Telegram
+          </TabsTrigger>
+        </TabsList>
 
-                <TabsContent value="telegram" className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Telegram Configuration</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>Enable Telegram Notifications</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Send alerts via Telegram bot
-                                    </p>
-                                </div>
-                                <Switch />
-                            </div>
+        {/* EMAIL TAB */}
+        <TabsContent value="email">
+          <Card>
+            <CardHeader>
+              <CardTitle>Email Configuration (Brevo)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Enable Email Notifications</Label>
+                </div>
+                <Switch
+                  checked={emailConfig.enabled}
+                  onCheckedChange={(v) =>
+                    setEmailConfig({ ...emailConfig, enabled: v })
+                  }
+                />
+              </div>
 
-                            <div className="space-y-2">
-                                <Label>Bot Token</Label>
-                                <Input placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" />
-                                <p className="text-xs text-muted-foreground">
-                                    Get your bot token from @BotFather on Telegram
-                                </p>
-                            </div>
+              <div className="space-y-2">
+                <Label>Brevo API Key</Label>
+                <Input
+                  value={emailConfig.config.apiKey}
+                  onChange={(e) =>
+                    setEmailConfig({
+                      ...emailConfig,
+                      config: { ...emailConfig.config, apiKey: e.target.value },
+                    })
+                  }
+                />
+              </div>
 
-                            <div className="space-y-2">
-                                <Label>Chat ID</Label>
-                                <Input placeholder="-1001234567890" />
-                                <p className="text-xs text-muted-foreground">
-                                    Your personal or group chat ID
-                                </p>
-                            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>From Email</Label>
+                  <Input
+                    value={emailConfig.config.fromEmail}
+                    onChange={(e) =>
+                      setEmailConfig({
+                        ...emailConfig,
+                        config: { ...emailConfig.config, fromEmail: e.target.value },
+                      })
+                    }
+                  />
+                </div>
 
-                            <div className="rounded-lg bg-muted p-4 space-y-2">
-                                <p className="text-sm font-medium">Setup Instructions:</p>
-                                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                                    <li>Create a bot using @BotFather on Telegram</li>
-                                    <li>Copy the bot token provided</li>
-                                    <li>Add the bot to your group or start a chat</li>
-                                    <li>Get your chat ID using @userinfobot</li>
-                                </ol>
-                            </div>
+                <div>
+                  <Label>From Name</Label>
+                  <Input
+                    value={emailConfig.config.fromName}
+                    onChange={(e) =>
+                      setEmailConfig({
+                        ...emailConfig,
+                        config: { ...emailConfig.config, fromName: e.target.value },
+                      })
+                    }
+                  />
+                </div>
+              </div>
 
-                            <div className="flex gap-2">
-                                <Button onClick={() => handleTest('Telegram')}>
-                                    <TestTube className="mr-2 h-4 w-4" />
-                                    Test Connection
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+              <div>
+                <Label>To Email</Label>
+                <Input
+                  value={emailConfig.config.toEmail}
+                  onChange={(e) =>
+                    setEmailConfig({
+                      ...emailConfig,
+                      config: { ...emailConfig.config, toEmail: e.target.value },
+                    })
+                  }
+                />
+              </div>
 
-                <TabsContent value="whatsapp" className="space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>WhatsApp Configuration</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>Enable WhatsApp Notifications</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Send alerts via WhatsApp Business API
-                                    </p>
-                                </div>
-                                <Switch />
-                            </div>
+              <Button onClick={() => handleTest("brevo")}>
+                <TestTube className="mr-2 h-4 w-4" />
+                Test Connection
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                            <div className="space-y-2">
-                                <Label>API Key</Label>
-                                <Input placeholder="your-whatsapp-api-key" />
-                                <p className="text-xs text-muted-foreground">
-                                    Get your API key from WhatsApp Business Platform
-                                </p>
-                            </div>
+        {/* TELEGRAM TAB */}
+        <TabsContent value="telegram">
+          <Card>
+            <CardHeader>
+              <CardTitle>Telegram Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between">
+                <Label>Enable Telegram</Label>
+                <Switch
+                  checked={telegramConfig.enabled}
+                  onCheckedChange={(v) =>
+                    setTelegramConfig({ ...telegramConfig, enabled: v })
+                  }
+                />
+              </div>
 
-                            <div className="space-y-2">
-                                <Label>Phone Number</Label>
-                                <Input placeholder="+1234567890" />
-                                <p className="text-xs text-muted-foreground">
-                                    Include country code (e.g., +1 for US)
-                                </p>
-                            </div>
+              <div className="space-y-2">
+                <Label>Bot Token</Label>
+                <Input
+                  value={telegramConfig.config.bot_token}
+                  onChange={(e) =>
+                    setTelegramConfig({
+                      ...telegramConfig,
+                      config: { ...telegramConfig.config, bot_token: e.target.value },
+                    })
+                  }
+                />
+              </div>
 
-                            <div className="rounded-lg bg-muted p-4 space-y-2">
-                                <p className="text-sm font-medium">Setup Instructions:</p>
-                                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                                    <li>Create a WhatsApp Business account</li>
-                                    <li>Get API access from Meta Business Platform</li>
-                                    <li>Configure webhook for message delivery</li>
-                                    <li>Add your phone number to verified list</li>
-                                </ol>
-                            </div>
+              <div className="space-y-2">
+                <Label>Chat ID</Label>
+                <Input
+                  value={telegramConfig.config.chat_id}
+                  onChange={(e) =>
+                    setTelegramConfig({
+                      ...telegramConfig,
+                      config: { ...telegramConfig.config, chat_id: e.target.value },
+                    })
+                  }
+                />
+              </div>
 
-                            <div className="flex gap-2">
-                                <Button onClick={() => handleTest('WhatsApp')}>
-                                    <TestTube className="mr-2 h-4 w-4" />
-                                    Test Connection
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+              <Button onClick={() => handleTest("telegram")}>
+                <TestTube className="mr-2 h-4 w-4" />
+                Test Telegram
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-            <div className="flex justify-end">
-                <Button onClick={handleSave}>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save All Settings
-                </Button>
-            </div>
-        </div>
-    );
+      <div className="flex justify-end">
+        <Button onClick={handleSave}>
+          <Save className="mr-2 h-4 w-4" />
+          Save All Settings
+        </Button>
+      </div>
+    </div>
+  );
 }

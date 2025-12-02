@@ -111,3 +111,22 @@ export const systemLogs = pgTable("system_logs", {
   message: varchar("message", { length: 1024 }).notNull(),
   meta: jsonb("meta"), // detail tambahan (objek JSON)
 });
+
+export const integrations = pgTable("integrations", {
+  id: serial("id").primaryKey(),
+
+  // email | telegram | slack | discord | whatsapp
+  provider: varchar("provider", { length: 32 }).notNull(),
+
+  // menyimpan API key, chat id, smtp config, dsb.
+  config: jsonb("config").notNull(),
+
+  enabled: boolean("enabled").default(true).notNull(),
+
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

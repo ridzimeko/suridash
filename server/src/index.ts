@@ -3,8 +3,9 @@ import { Hono } from 'hono'
 import auth from "@/routes/auth";
 import { alertsRoute } from './routes/alerts';
 import type { AppEnv } from './types';
-import { authMiddleware } from './middlewares/auth-middleware';
 import { cors } from 'hono/cors';
+import { analyticsRoute } from './routes/analytics';
+import { integrationsRoute } from './routes/integrations';
 
 const app = new Hono<AppEnv>({
   strict: false,
@@ -14,7 +15,7 @@ const app = new Hono<AppEnv>({
 //   return c.text('Hello Hono!')
 // })
 
-const routes = [auth, alertsRoute] as const;
+const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute] as const;
 
 app.use(
   "/api/*",

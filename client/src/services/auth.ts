@@ -1,5 +1,5 @@
 // frontend/src/services/auth.js
-import { api } from "./api";
+import { api } from "../lib/api";
 
 // ⬅ Login user
 export async function login(email: string, password: string) {
