@@ -18,13 +18,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { mockAlerts } from '@/lib/mockData';
+// import { mockAlerts } from '@/lib/mockData';
 import dayjs from 'dayjs';
 import { Search, RefreshCw, Download } from 'lucide-react';
-import type { Alert, SeverityLevel } from '@/types';
+import type { SeverityLevel } from '@/types';
+import { useRealtimeAlerts } from '@/hooks/use-realtime-alers';
 
 export default function RealtimeAlerts() {
-    const [alerts] = useState<Alert[]>(mockAlerts);
+    const { alerts, status } = useRealtimeAlerts();
     const [searchTerm, setSearchTerm] = useState('');
     const [severityFilter, setSeverityFilter] = useState<string>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -64,14 +65,28 @@ export default function RealtimeAlerts() {
                         Monitor security alerts in real-time
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="icon">
-                        <RefreshCw className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export
-                    </Button>
+
+                <div className="flex items-center gap-3">
+                    {/* socket status indicator */}
+                    <div className="flex items-center gap-2">
+                        <span
+                            className={`h-3 w-3 rounded-full ${status === "connected" ? "bg-green-500" :
+                                    status === "error" ? "bg-red-500" :
+                                        "bg-yellow-500"
+                                }`}
+                        ></span>
+                        <span className="text-sm capitalize">{status}</span>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="icon">
+                            <RefreshCw className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline">
+                            <Download className="mr-2 h-4 w-4" />
+                            Export
+                        </Button>
+                    </div>
                 </div>
             </div>
 
