@@ -10,7 +10,7 @@ export function useRealtimeAlerts() {
 
     useEffect(() => {
         function connect() {
-            const BASE_URL_API = (import.meta.env.VITE_BASE_URL_API || "ws://localhost:3000/api").replace(/^http/, "ws");
+            const BASE_URL_API = import.meta.env.VITE_BASE_URL_WS || "http://localhost:3000/ws";
             const ws = new WebSocket(`${BASE_URL_API}/alerts/realtime`);
             wsRef.current = ws;
 

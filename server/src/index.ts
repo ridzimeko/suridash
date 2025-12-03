@@ -7,7 +7,8 @@ import { cors } from 'hono/cors';
 import { analyticsRoute } from './routes/analytics';
 import { integrationsRoute } from './routes/integrations';
 import { systemRoute } from './routes/system';
-import { realtimeAlertsRoute } from './routes/alerts-realtime';
+import { createNodeWebSocket } from '@hono/node-ws';
+import { Tail } from 'tail';
 
 const app = new Hono<AppEnv>({
   strict: false,
@@ -17,7 +18,7 @@ const app = new Hono<AppEnv>({
 //   return c.text('Hello Hono!')
 // })
 
-const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute, realtimeAlertsRoute] as const;
+const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute] as const;
 
 app.use(
   "/api/*",
@@ -31,9 +32,49 @@ routes.forEach((route) => {
   app.route("/api", route);
 });
 
-serve({
+// Initialize WebSocket
+const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app: app });
+
+// WebSocket endpoint
+app.get(
+  "/ws/alerts/realtime",
+  upgradeWebSocket((c) => {
+    return {
+      onMessage(evt, ws) {
+        console.log("Client connected to Suricata alerts");
+
+        const tail = new Tail("/var/log/suricata/eve.json", {
+          follow: true,
+          useWatchFile: true,
+        });
+
+        tail.on("line", (line) => {
+          try {
+            const json = JSON.parse(line);
+
+            if (json.event_type === "alert") {
+              ws.send(JSON.stringify(json));
+            }
+          } catch (err) {
+            console.error("Failed to parse alert JSON:", err);
+          }
+        });
+
+        tail.on("error", (err) => console.error("Tail error:", err));
+      },
+
+      onClose() {
+        console.log("Client disconnected");
+      },
+    };
+  })
+);
+
+
+const server = serve({
   fetch: app.fetch,
   port: 3000
 }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`)
 })
+injectWebSocket(server);

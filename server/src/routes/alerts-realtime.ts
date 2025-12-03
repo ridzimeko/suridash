@@ -9,7 +9,7 @@ const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app: realtim
 
 // WebSocket endpoint
 realtimeAlertsRoute.get(
-  "/alerts/realtime",
+  "/ws/alerts/realtime",
   upgradeWebSocket((c) => {
     return {
       onMessage(evt, ws) {
