@@ -22,17 +22,17 @@ import {
 import dayjs from 'dayjs';
 import { Search, RefreshCw, Download } from 'lucide-react';
 import type { SeverityLevel } from '@/types';
-import { useRealtimeAlerts } from '@/hooks/use-realtime-alers';
+import { useAlerts } from '@/hooks/use-alerts';
 
 export default function RealtimeAlerts() {
-    const { alerts, status } = useRealtimeAlerts();
+    const { alerts, refresh } = useAlerts();
     const [searchTerm, setSearchTerm] = useState('');
     const [severityFilter, setSeverityFilter] = useState<string>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
     const filteredAlerts = alerts.filter((alert) => {
         const matchesSearch =
-            alert.sourceIP.includes(searchTerm) ||
+            alert.srcIp.includes(searchTerm) ||
             alert.signature.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesSeverity =
             severityFilter === 'all' || alert.severity === severityFilter;
@@ -79,7 +79,7 @@ export default function RealtimeAlerts() {
                     </div>
 
                     <div className="flex gap-2">
-                        <Button variant="outline" size="icon">
+                        <Button onClick={refresh} variant="outline" size="icon">
                             <RefreshCw className="h-4 w-4" />
                         </Button>
                         <Button variant="outline">
@@ -117,7 +117,7 @@ export default function RealtimeAlerts() {
                                 <SelectItem value="low">Low</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        {/* <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Category" />
                             </SelectTrigger>
@@ -129,7 +129,7 @@ export default function RealtimeAlerts() {
                                     </SelectItem>
                                 ))}
                             </SelectContent>
-                        </Select>
+                        </Select> */}
                     </div>
                 </CardContent>
             </Card>
@@ -168,10 +168,10 @@ export default function RealtimeAlerts() {
                                         {alert.signature}
                                     </TableCell>
                                     <TableCell className="font-mono text-xs">
-                                        {alert.sourceIP}
+                                        {alert.srcIp}
                                     </TableCell>
                                     <TableCell className="font-mono text-xs">
-                                        {alert.destIP}
+                                        {alert.destIp}
                                     </TableCell>
                                     <TableCell className="text-sm">{alert.country}</TableCell>
                                     <TableCell>

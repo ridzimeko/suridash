@@ -8,7 +8,7 @@ import { analyticsRoute } from './routes/analytics';
 import { integrationsRoute } from './routes/integrations';
 import { systemRoute } from './routes/system';
 import { createNodeWebSocket } from '@hono/node-ws';
-import { Tail } from 'tail';
+import { startAlertTailer } from "@/lib/alertTailer";
 
 const app = new Hono<AppEnv>({
   strict: false,
@@ -42,27 +42,7 @@ app.get(
     return {
       onOpen(evt, ws) {
         console.log("Client connected to Suricata alerts");
-
-        const tail = new Tail("/var/log/suricata/eve.json", {
-          follow: true,
-          useWatchFile: true,
-          fromBeginning: false,
-        });
-
-        tail.on("line", (line) => {
-          try {
-            const json = JSON.parse(line);
-            console.log("New line from eve.json:", json);
-
-            if (json.event_type === "alert") {
-              ws.send(JSON.stringify(json));
-            }
-          } catch (err) {
-            console.error("Failed to parse alert JSON:", err);
-          }
-        });
-
-        tail.on("error", (err) => console.error("Tail error:", err));
+        // TODO: add to clients websocket
       },
 
       onClose() {
@@ -79,4 +59,6 @@ const server = serve({
 }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`)
 })
+
 injectWebSocket(server);
+startAlertTailer();

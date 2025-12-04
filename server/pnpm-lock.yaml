@@ -29,6 +29,9 @@ importers:
       hono:
         specifier: ^4.10.7
         version: 4.10.7
+      ky:
+        specifier: ^1.14.0
+        version: 1.14.0
       systeminformation:
         specifier: ^5.27.11
         version: 5.27.11
@@ -608,6 +611,10 @@ packages:
   jose@6.1.2:
     resolution: {integrity: sha512-MpcPtHLE5EmztuFIqB0vzHAWJPpmN1E6L4oo+kze56LIs3MyXIj9ZHMDxqOvkP38gBR7K1v3jqd4WU2+nrfONQ==}
 
+  ky@1.14.0:
+    resolution: {integrity: sha512-Rczb6FMM6JT0lvrOlP5WUOCB7s9XKxzwgErzhKlKde1bEV90FXplV1o87fpt4PU/asJFiqjYJxAJyzJhcrxOsQ==}
+    engines: {node: '>=18'}
+
   kysely@0.28.8:
     resolution: {integrity: sha512-QUOgl5ZrS9IRuhq5FvOKFSsD/3+IA6MLE81/bOOTRA/YQpKDza2sFdN5g6JCB9BOpqMJDGefLCQ9F12hRS13TA==}
     engines: {node: '>=20.0.0'}
@@ -1048,6 +1055,8 @@ snapshots:
   hono@4.10.7: {}
 
   jose@6.1.2: {}
+
+  ky@1.14.0: {}
 
   kysely@0.28.8: {}
 

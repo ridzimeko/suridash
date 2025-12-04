@@ -9,9 +9,9 @@ export interface Alert {
   severity: SeverityLevel;
   category: string;
   signature: string;
-  sourceIP: string;
-  sourcePort: number;
-  destIP: string;
+  srcIp: string;
+  srcPort: number;
+  destIp: string;
   destPort: number;
   protocol: string;
   country: string;
