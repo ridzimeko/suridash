@@ -40,17 +40,19 @@ app.get(
   "/ws/alerts/realtime",
   upgradeWebSocket((c) => {
     return {
-      onMessage(evt, ws) {
+      onOpen(evt, ws) {
         console.log("Client connected to Suricata alerts");
 
         const tail = new Tail("/var/log/suricata/eve.json", {
           follow: true,
           useWatchFile: true,
+          fromBeginning: false,
         });
 
         tail.on("line", (line) => {
           try {
             const json = JSON.parse(line);
+            console.log("New line from eve.json:", json);
 
             if (json.event_type === "alert") {
               ws.send(JSON.stringify(json));
