@@ -1,4 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import {
+    flexRender,
+    getCoreRowModel,
+    getSortedRowModel,
+    getPaginationRowModel,
+    useReactTable,
+    type ColumnDef,
+    type SortingState
+} from '@tanstack/react-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,43 +27,232 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-// import { mockAlerts } from '@/lib/mockData';
+import {
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+    Search,
+    RefreshCw,
+    Download,
+    ArrowUpDown,
+    ArrowUp,
+    ArrowDown
+} from 'lucide-react';
+
 import dayjs from 'dayjs';
-import { Search, RefreshCw, Download } from 'lucide-react';
-import type { SeverityLevel } from '@/types';
+import type { SeverityLevel, Alert } from '@/types';
 import { useAlerts } from '@/hooks/use-alerts';
 
+// Define columns for the table
+const columns: ColumnDef<Alert>[] = [
+    {
+        accessorKey: 'createdAt',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    className="p-0 hover:bg-transparent"
+                >
+                    Time
+                    {column.getIsSorted() === 'asc' ? (
+                        <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : column.getIsSorted() === 'desc' ? (
+                        <ArrowDown className="ml-2 h-4 w-4" />
+                    ) : (
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
+                </Button>
+            );
+        },
+        cell: ({ row }) => {
+            const createdAt = row.getValue('createdAt') as string;
+            return (
+                <div className="font-mono text-xs">
+                    {dayjs(createdAt).format('HH:mm:ss')}
+                </div>
+            );
+        },
+        sortingFn: 'datetime',
+    },
+    {
+        accessorKey: 'severity',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+                    className="p-0 hover:bg-transparent"
+                >
+                    Severity
+                    {column.getIsSorted() === 'asc' ? (
+                        <ArrowUp className="ml-2 h-4 w-4" />
+                    ) : column.getIsSorted() === 'desc' ? (
+                        <ArrowDown className="ml-2 h-4 w-4" />
+                    ) : (
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    )}
+                </Button>
+            );
+        },
+        cell: ({ row }) => {
+            const severity = row.getValue('severity') as SeverityLevel;
+            const getSeverityColor = (severity: SeverityLevel) => {
+                switch (severity) {
+                    case 'critical':
+                        return 'bg-red-500 hover:bg-red-600';
+                    case 'high':
+                        return 'bg-orange-500 hover:bg-orange-600';
+                    case 'medium':
+                        return 'bg-yellow-500 hover:bg-yellow-600';
+                    case 'low':
+                        return 'bg-blue-500 hover:bg-blue-600';
+                    default:
+                        return 'bg-gray-500 hover:bg-gray-600';
+                }
+            };
+
+            return (
+                <Badge className={getSeverityColor(severity)}>
+                    {severity}
+                </Badge>
+            );
+        },
+        sortingFn: (rowA, rowB, columnId) => {
+            const order = { critical: 4, high: 3, medium: 2, low: 1 };
+            const a = order[rowA.getValue(columnId) as SeverityLevel] || 0;
+            const b = order[rowB.getValue(columnId) as SeverityLevel] || 0;
+            return a > b ? 1 : a < b ? -1 : 0;
+        },
+    },
+    {
+        accessorKey: 'category',
+        header: 'Category',
+        cell: ({ row }) => (
+            <div className="text-sm">{row.getValue('category')}</div>
+        ),
+    },
+    {
+        accessorKey: 'signature',
+        header: 'Signature',
+        cell: ({ row }) => {
+            const signature = row.getValue('signature') as string;
+            return (
+                <div className="max-w-xs truncate text-sm" title={signature}>
+                    {signature}
+                </div>
+            );
+        },
+    },
+    {
+        accessorKey: 'srcIp',
+        header: 'Source IP',
+        cell: ({ row }) => (
+            <div className="font-mono text-xs">{row.getValue('srcIp')}</div>
+        ),
+    },
+    {
+        accessorKey: 'destIp',
+        header: 'Dest IP',
+        cell: ({ row }) => (
+            <div className="font-mono text-xs">{row.getValue('destIp')}</div>
+        ),
+    },
+    {
+        accessorKey: 'country',
+        header: 'Country',
+        cell: ({ row }) => (
+            <div className="text-sm">{row.getValue('country') || 'N/A'}</div>
+        ),
+    },
+    {
+        accessorKey: 'blocked',
+        header: 'Status',
+        cell: ({ row }) => {
+            const blocked = row.getValue('blocked') as boolean;
+            return blocked ? (
+                <Badge variant="destructive">Blocked</Badge>
+            ) : (
+                <Badge variant="secondary">Allowed</Badge>
+            );
+        },
+    },
+];
+
 export default function RealtimeAlerts() {
-    const { alerts, refresh } = useAlerts();
     const [searchTerm, setSearchTerm] = useState('');
     const [severityFilter, setSeverityFilter] = useState<string>('all');
-    const [categoryFilter, setCategoryFilter] = useState<string>('all');
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: 'timestamp', desc: true } // Default sort by latest first
+    ]);
 
-    const filteredAlerts = alerts.filter((alert) => {
-        const matchesSearch =
-            alert.srcIp.includes(searchTerm) ||
-            alert.signature.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesSeverity =
-            severityFilter === 'all' || alert.severity === severityFilter;
-        const matchesCategory =
-            categoryFilter === 'all' || alert.category === categoryFilter;
-        return matchesSearch && matchesSeverity && matchesCategory;
+    const { alerts, refresh } = useAlerts(1, 500);
+
+    // Apply filters before passing to table
+    const filteredData = useMemo(() => {
+        return alerts.filter((alert) => {
+            const matchesSearch =
+                alert.srcIp.includes(searchTerm) ||
+                alert.destIp.includes(searchTerm) ||
+                alert.signature.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSeverity =
+                severityFilter === 'all' || alert.severity === severityFilter;
+            return matchesSearch && matchesSeverity;
+        });
+    }, [alerts, searchTerm, severityFilter]);
+
+    // Configure table
+    const table = useReactTable({
+        data: filteredData,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        onSortingChange: setSorting,
+        state: {
+            sorting,
+        },
+        initialState: {
+            pagination: {
+                pageSize: 20, // Default page size
+                pageIndex: 0,
+            },
+        },
     });
 
-    const getSeverityColor = (severity: SeverityLevel) => {
-        switch (severity) {
-            case 'critical':
-                return 'bg-red-500';
-            case 'high':
-                return 'bg-orange-500';
-            case 'medium':
-                return 'bg-yellow-500';
-            case 'low':
-                return 'bg-blue-500';
-        }
+    // Handle page size change
+    const handlePageSizeChange = (value: string) => {
+        table.setPageSize(Number(value));
     };
 
-    const categories = Array.from(new Set(alerts.map((a) => a.category)));
+    // Handle export
+    const handleExport = () => {
+        const headers = ['Time', 'Severity', 'Category', 'Signature', 'Source IP', 'Dest IP', 'Country', 'Status'];
+        const csvContent = [
+            headers.join(','),
+            ...filteredData.map(alert => [
+                dayjs(alert.timestamp).format('YYYY-MM-DD HH:mm:ss'),
+                alert.severity,
+                alert.category,
+                `"${alert.signature.replace(/"/g, '""')}"`,
+                alert.srcIp,
+                alert.destIp,
+                alert.country || 'N/A',
+                alert.blocked ? 'Blocked' : 'Allowed'
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `alerts-${dayjs().format('YYYY-MM-DD-HHmmss')}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="space-y-6">
@@ -67,12 +265,14 @@ export default function RealtimeAlerts() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* socket status indicator */}
+                    {/* Socket status indicator */}
                     <div className="flex items-center gap-2">
                         <span
-                            className={`h-3 w-3 rounded-full ${status === "connected" ? "bg-green-500" :
-                                    status === "error" ? "bg-red-500" :
-                                        "bg-yellow-500"
+                            className={`h-3 w-3 rounded-full animate-pulse ${status === 'connected'
+                                    ? 'bg-green-500'
+                                    : status === 'error'
+                                        ? 'bg-red-500'
+                                        : 'bg-yellow-500'
                                 }`}
                         ></span>
                         <span className="text-sm capitalize">{status}</span>
@@ -82,7 +282,7 @@ export default function RealtimeAlerts() {
                         <Button onClick={refresh} variant="outline" size="icon">
                             <RefreshCw className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline">
+                        <Button variant="outline" onClick={handleExport}>
                             <Download className="mr-2 h-4 w-4" />
                             Export
                         </Button>
@@ -117,74 +317,171 @@ export default function RealtimeAlerts() {
                                 <SelectItem value="low">Low</SelectItem>
                             </SelectContent>
                         </Select>
-                        {/* <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Category" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Categories</SelectItem>
-                                {categories.map((cat) => (
-                                    <SelectItem key={cat} value={cat}>
-                                        {cat}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select> */}
                     </div>
                 </CardContent>
             </Card>
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Alerts ({filteredAlerts.length})</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>
+                        Alerts ({filteredData.length})
+                        {table.getFilteredRowModel().rows.length !== filteredData.length && (
+                            <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                (Showing {table.getFilteredRowModel().rows.length} filtered of {filteredData.length})
+                            </span>
+                        )}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Show</span>
+                        <Select
+                            value={table.getState().pagination.pageSize.toString()}
+                            onValueChange={handlePageSizeChange}
+                        >
+                            <SelectTrigger className="w-[80px]">
+                                <SelectValue placeholder="20" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="20">20</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                                <SelectItem value="100">100</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <span className="text-sm text-muted-foreground">per page</span>
+                    </div>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Time</TableHead>
-                                <TableHead>Severity</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead>Signature</TableHead>
-                                <TableHead>Source IP</TableHead>
-                                <TableHead>Dest IP</TableHead>
-                                <TableHead>Country</TableHead>
-                                <TableHead>Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredAlerts.map((alert) => (
-                                <TableRow key={alert.id}>
-                                    <TableCell className="font-mono text-xs">
-                                        {dayjs(alert.timestamp).format('HH:mm:ss')}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge className={getSeverityColor(alert.severity)}>
-                                            {alert.severity}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-sm">{alert.category}</TableCell>
-                                    <TableCell className="max-w-xs truncate text-sm">
-                                        {alert.signature}
-                                    </TableCell>
-                                    <TableCell className="font-mono text-xs">
-                                        {alert.srcIp}
-                                    </TableCell>
-                                    <TableCell className="font-mono text-xs">
-                                        {alert.destIp}
-                                    </TableCell>
-                                    <TableCell className="text-sm">{alert.country}</TableCell>
-                                    <TableCell>
-                                        {alert.blocked ? (
-                                            <Badge variant="destructive">Blocked</Badge>
-                                        ) : (
-                                            <Badge variant="secondary">Allowed</Badge>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead key={header.id}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </TableHead>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
+                            <TableBody>
+                                {table.getRowModel().rows?.length ? (
+                                    table.getRowModel().rows.map((row) => (
+                                        <TableRow
+                                            key={row.id}
+                                            data-state={row.getIsSelected() && 'selected'}
+                                            className="hover:bg-muted/50"
+                                        >
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-24 text-center"
+                                        >
+                                            {alerts.length === 0
+                                                ? 'No alerts received yet'
+                                                : 'No alerts match your filters'}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {table.getPageCount() > 1 && (
+                        <div className="flex items-center justify-between px-2 py-4">
+                            <div className="text-sm text-muted-foreground">
+                                Page {table.getState().pagination.pageIndex + 1} of{' '}
+                                {table.getPageCount()}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => table.setPageIndex(0)}
+                                    disabled={!table.getCanPreviousPage()}
+                                >
+                                    <ChevronsLeft className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => table.previousPage()}
+                                    disabled={!table.getCanPreviousPage()}
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: Math.min(5, table.getPageCount()) }, (_, i) => {
+                                        let pageIndex;
+                                        const currentPage = table.getState().pagination.pageIndex;
+                                        const totalPages = table.getPageCount();
+
+                                        if (totalPages <= 5) {
+                                            pageIndex = i;
+                                        } else if (currentPage <= 2) {
+                                            pageIndex = i;
+                                        } else if (currentPage >= totalPages - 3) {
+                                            pageIndex = totalPages - 5 + i;
+                                        } else {
+                                            pageIndex = currentPage - 2 + i;
+                                        }
+
+                                        return (
+                                            <Button
+                                                key={pageIndex}
+                                                variant={
+                                                    table.getState().pagination.pageIndex === pageIndex
+                                                        ? 'default'
+                                                        : 'outline'
+                                                }
+                                                size="sm"
+                                                onClick={() => table.setPageIndex(pageIndex)}
+                                            >
+                                                {pageIndex + 1}
+                                            </Button>
+                                        );
+                                    })}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => table.nextPage()}
+                                    disabled={!table.getCanNextPage()}
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                    disabled={!table.getCanNextPage()}
+                                >
+                                    <ChevronsRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                                Showing {table.getRowModel().rows.length} of{' '}
+                                {table.getFilteredRowModel().rows.length} rows
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
