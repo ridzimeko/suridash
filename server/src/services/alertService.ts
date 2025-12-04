@@ -1,7 +1,6 @@
 import { db } from "@/db";
 import { alerts } from "@/db/schema/dashboard-schema";
 import { fetchGeoIP } from "./geoipService";
-import { nanoid } from "better-auth";
 
 export async function saveAlert(json: any) {
   const geo = await fetchGeoIP(json.src_ip);
