@@ -9,6 +9,7 @@ import { integrationsRoute } from './routes/integrations';
 import { systemRoute } from './routes/system';
 import { createNodeWebSocket } from '@hono/node-ws';
 import { startAlertTailer } from "@/lib/alertTailer";
+import { startIpsetScheduler } from './lib/ipsetScheduler';
 
 const app = new Hono<AppEnv>({
   strict: false,
@@ -62,3 +63,4 @@ const server = serve({
 
 injectWebSocket(server);
 startAlertTailer();
+startIpsetScheduler();

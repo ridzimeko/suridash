@@ -1,11 +1,32 @@
 import { db } from "@/db";
 import { alerts } from "@/db/schema/dashboard-schema";
 import { fetchGeoIP } from "./geoipService";
+import { blockIpAndRecord } from "./ipsetService";
 
 export async function saveAlert(json: any) {
+
+  // don't block private IPs
+  const IP = json.src_ip;
+  const privateIpRanges = [
+    /^10\./,
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
+    /^192\.168\./,
+    /^127\./,
+    /^169\.254\./,
+    /^::1$/,
+    /^fc00:/,
+    /^fe80:/,
+  ];
+  
+  if (privateIpRanges.some((r) => r.test(IP))) {
+    console.log("Skipping private IP alert:", IP);
+    return;
+  }
+
+  const sev = (json.alert?.severity || "low").toLowerCase();
   const geo = await fetchGeoIP(json.src_ip);
 
-  await db.insert(alerts).values({
+  const alert = {
     signature: json.alert?.signature ?? "Unknown",
     category: json.alert?.category ?? "Uncategorized",
     severity: json.alert?.severity,
@@ -21,5 +42,18 @@ export async function saveAlert(json: any) {
     latitude: geo?.latitude ? geo.latitude.toString() : null,
     longitude: geo?.longitude ? geo.longitude.toString() : null,
     wasBlocked: false,
-  });
+  };
+
+   // Auto-block rules
+  if (IP && (sev === "critical" || sev === "high")) {
+    try {
+      // block selama 60 menit misalnya
+      await blockIpAndRecord({ ip: IP, reason: `Auto block for ${sev}`, attackType: json.alert?.category, ttlMinutes: 60, autoBlocked: true });
+      alert.wasBlocked = true;
+    } catch (e) {
+      console.error("Auto block failed:", e);
+    }
+  }
+
+  await db.insert(alerts).values(alert);
 }

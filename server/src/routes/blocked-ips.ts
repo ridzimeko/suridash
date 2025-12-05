@@ -4,6 +4,7 @@ import { authMiddleware } from "@/middlewares/auth-middleware";
 import { db } from "../db";
 import { blockedIps } from "@/db/schema/dashboard-schema";
 import { desc, eq, and, sql } from "drizzle-orm";
+import { unblockIp } from "@/services/ipsetService";
 
 export const blockedRoute = new Hono<AppEnv>();
 
@@ -131,3 +132,10 @@ blockedRoute.delete("/blocked-ips/:id", async (c) => {
 
   return c.json({ success: true });
 });
+
+blockedRoute.post("/blocked-ips/:id/unblock", async (c) => {
+  const id = Number(c.req.param("id"));
+  const updated = await unblockIp({ id });
+  return c.json({ success: true, data: updated });
+});
+
