@@ -5,7 +5,6 @@ import { blockIpAndRecord } from "./ipsetService";
 import { notifyAll } from "./notificationService";
 
 export async function saveAlert(json: any) {
-
   // don't block private IPs
   const IP = json.src_ip;
   const privateIpRanges = [
@@ -18,7 +17,7 @@ export async function saveAlert(json: any) {
     /^fc00:/,
     /^fe80:/,
   ];
-  
+
   if (privateIpRanges.some((r) => r.test(IP))) {
     console.log("Skipping private IP alert:", IP);
     return;
@@ -45,11 +44,17 @@ export async function saveAlert(json: any) {
     wasBlocked: false,
   };
 
-   // Auto-block rules
+  // Auto-block rules
   if (IP && (sev === "critical" || sev === "high")) {
     try {
       // block selama 60 menit misalnya
-      await blockIpAndRecord({ ip: IP, reason: `Auto block for ${sev}`, attackType: json.alert?.category, ttlMinutes: 60, autoBlocked: true });
+      await blockIpAndRecord({
+        ip: IP,
+        reason: `Auto block for ${sev}`,
+        attackType: json.alert?.category,
+        ttlMinutes: 60,
+        autoBlocked: true,
+      });
       alert.wasBlocked = true;
     } catch (e) {
       console.error("Auto block failed:", e);
@@ -59,7 +64,7 @@ export async function saveAlert(json: any) {
   if (alert.severity === 1 || alert.severity === 2) {
     notifyAll(alert).catch((e) => {
       console.error("Notification failed:", e);
-    }
+    });
   }
 
   await db.insert(alerts).values(alert);

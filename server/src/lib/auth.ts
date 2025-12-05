@@ -13,9 +13,9 @@ export const auth = betterAuth({
   },
   advanced: {
     defaultCookieAttributes: {
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
-      partitioned: true,
+      // partitioned: true,
       httpOnly: false
     }
   },

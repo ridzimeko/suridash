@@ -1,9 +1,17 @@
 import { Tail } from "tail";
 import { saveAlert } from "../services/alertService";
+import fs from "fs";
 
 const wsClients = new Set<any>();
 
+const EVE_PATH = "/var/log/suricata/eve.json";
+
 export function startAlertTailer() {
+  if (!fs.existsSync(EVE_PATH)) {
+    console.warn("[Tailer] eve.json not found. Please check Suricata configuration.");
+    return;
+  }
+
   const tail = new Tail("/var/log/suricata/eve.json", {
     follow: true,
     useWatchFile: true,
@@ -32,5 +40,5 @@ export function startAlertTailer() {
     console.error("Tailer Failed:", err);
   });
 
-  console.log("Suricata tailer running...");
+  console.log("[Tailer] Suricata tailer running...");
 }
