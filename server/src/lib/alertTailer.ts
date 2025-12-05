@@ -12,7 +12,7 @@ export function startAlertTailer() {
     return;
   }
 
-  const tail = new Tail("/var/log/suricata/eve.json", {
+  const tail = new Tail(EVE_PATH, {
     follow: true,
     useWatchFile: true,
   });
