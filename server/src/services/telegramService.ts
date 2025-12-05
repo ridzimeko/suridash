@@ -2,17 +2,21 @@ import { db } from "@/db";
 import { integrations } from "@/db/schema/dashboard-schema";
 import { eq } from "drizzle-orm";
 
-export async function sendTelegram(message: string) {
+type TelegramParams = {
+  chat_id?: string;
+  bot_token?: string;
+  message: string;
+};
+
+export async function sendTelegram({ chat_id, bot_token, message }: TelegramParams, isTest = false) {
   const [tg] = await db
     .select()
     .from(integrations)
     .where(eq(integrations.provider, "telegram"));
 
-  if (!tg?.enabled) return;
+  if (!tg?.enabled && !isTest) return;
 
-  const { bot_token, chat_id } = tg.config as { bot_token: string; chat_id: string };
-
-  await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
+  const res = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -21,4 +25,9 @@ export async function sendTelegram(message: string) {
       parse_mode: "HTML",
     }),
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
 }

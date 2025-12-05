@@ -6,7 +6,7 @@ export type RuleAction = 'alert' | 'drop' | 'reject';
 export interface Alert {
   id: string;
   timestamp: Date;
-  severity: SeverityLevel;
+  severity: number;
   category: string;
   signature: string;
   srcIp: string;

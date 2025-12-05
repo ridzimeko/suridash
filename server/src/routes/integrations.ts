@@ -65,15 +65,21 @@ integrationsRoute.delete("/integrations/:id", async (c) => {
 });
 
 integrationsRoute.post("/integrations/test", async (c) => {
-  const { provider } = await c.req.json();
+  const { provider, config } = await c.req.json();
 
   if (provider === "brevo") {
-    await sendEmailBrevo("test@example.com", "Test Email", "<b>Email OK</b>");
-    return c.json({ message: "Test email sent via Brevo!" });
+    await sendEmailBrevo({
+      to: config.emailTo, 
+      subject: "Test Email from SuriDash", 
+      html: "<b>It's work! This is a test email sent from SuriDash.</b>"
+    }, true);
+    return c.json({ message: "Test email sent!" });
   }
 
   if (provider === "telegram") {
-    await sendTelegram("Telegram test OK");
+    await sendTelegram({
+      message: "Test message from SuriDash via Telegram!",
+    }, true);
     return c.json({ message: "Test Telegram sent!" });
   }
 

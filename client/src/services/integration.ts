@@ -20,8 +20,8 @@ export async function saveIntegration(provider: string, config: any, enabled: bo
 }
 
 // test email or telegram
-export async function testIntegration(provider: string) {
+export async function testIntegration(provider: string, config: unknown) {
   return api.post("integrations/test", {
-    json: { provider },
+    json: { provider, config },
   }).json();
 }

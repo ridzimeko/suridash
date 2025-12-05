@@ -89,7 +89,13 @@ export default function Integration() {
     toast.loading("Testing...");
 
     try {
-      const res = await testIntegration(provider);
+      const config = provider === "brevo" ? {
+        emailTo: emailConfig.config.toEmail
+      } : {
+        bot_token: telegramConfig.config.bot_token,
+        chat_id: telegramConfig.config.chat_id
+      };
+      const res = await testIntegration(provider, config);
       toast.dismiss();
       toast.success(res.message ?? "Test success!");
     } catch {

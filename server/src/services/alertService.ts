@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { alerts } from "@/db/schema/dashboard-schema";
 import { fetchGeoIP } from "./geoipService";
 import { blockIpAndRecord } from "./ipsetService";
+import { notifyAll } from "./notificationService";
 
 export async function saveAlert(json: any) {
 
@@ -52,6 +53,12 @@ export async function saveAlert(json: any) {
       alert.wasBlocked = true;
     } catch (e) {
       console.error("Auto block failed:", e);
+    }
+  }
+
+  if (alert.severity === 1 || alert.severity === 2) {
+    notifyAll(alert).catch((e) => {
+      console.error("Notification failed:", e);
     }
   }
 

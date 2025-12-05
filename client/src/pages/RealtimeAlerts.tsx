@@ -191,13 +191,20 @@ export default function RealtimeAlerts() {
 
     // Apply filters before passing to table
     const filteredData = useMemo(() => {
+        const severityMap: Record<string, SeverityLevel> = {
+            1: 'critical',
+            2: 'high',
+            3: 'medium',
+            4: 'low'
+        };
+
         return alerts.filter((alert) => {
             const matchesSearch =
                 alert.srcIp.includes(searchTerm) ||
                 alert.destIp.includes(searchTerm) ||
                 alert.signature.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesSeverity =
-                severityFilter === 'all' || alert.severity === severityFilter;
+                severityFilter === 'all' || severityMap[alert.severity] === severityFilter;
             return matchesSearch && matchesSeverity;
         });
     }, [alerts, searchTerm, severityFilter]);
@@ -269,10 +276,10 @@ export default function RealtimeAlerts() {
                     <div className="flex items-center gap-2">
                         <span
                             className={`h-3 w-3 rounded-full animate-pulse ${status === 'connected'
-                                    ? 'bg-green-500'
-                                    : status === 'error'
-                                        ? 'bg-red-500'
-                                        : 'bg-yellow-500'
+                                ? 'bg-green-500'
+                                : status === 'error'
+                                    ? 'bg-red-500'
+                                    : 'bg-yellow-500'
                                 }`}
                         ></span>
                         <span className="text-sm capitalize">{status}</span>
@@ -305,7 +312,7 @@ export default function RealtimeAlerts() {
                                 className="pl-10"
                             />
                         </div>
-                        <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                        <Select value={severityFilter.toString()} onValueChange={setSeverityFilter}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Severity" />
                             </SelectTrigger>
