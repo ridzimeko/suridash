@@ -23,7 +23,13 @@ export async function saveAlert(json: any) {
     return;
   }
 
-  const sev = (json.alert?.severity || "low").toLowerCase();
+  const severityMap = {
+    1: "critical",
+    2: "high",
+    3: "medium",
+    4: "low",
+  }
+
   const geo = await fetchGeoIP(json.src_ip);
 
   const alert = {
@@ -45,12 +51,12 @@ export async function saveAlert(json: any) {
   };
 
   // Auto-block rules
-  if (IP && (sev === "critical" || sev === "high")) {
+  if (IP && (alert.severity === 1 || alert.severity === 2)) {
     try {
       // block selama 60 menit misalnya
       await blockIpAndRecord({
         ip: IP,
-        reason: `Auto block for ${sev}`,
+        reason: `Auto block for ${severityMap[alert.severity as keyof typeof severityMap] ?? 'unknown'}`,
         attackType: json.alert?.category,
         ttlMinutes: 60,
         autoBlocked: true,
