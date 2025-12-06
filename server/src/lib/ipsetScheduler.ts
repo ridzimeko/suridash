@@ -13,12 +13,12 @@ export function startIpsetScheduler(intervalMs = 60_000) {
         try {
           await unblockIp({ id: r.id });
           console.log("Auto-unblocked:", r.ip);
-        } catch (e) {
-          console.error("Failed to auto-unblock", r.ip, e);
+        } catch (e: any) {
+          console.error("Failed to auto-unblock", r.ip, e.message);
         }
       }
-    } catch (e) {
-      console.error("Scheduler error:", e);
+    } catch (e: any) {
+      console.error("Scheduler error:", e.message);
     }
   }, intervalMs);
 }

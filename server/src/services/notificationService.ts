@@ -19,18 +19,18 @@ export async function notifyAll(alert: any) {
                     html: buildEmailTemplate(alert)
                 });
                 console.log("Email sent");
-            } catch (e) {
-                console.error("Email notification failed:", e);
+            } catch (e: any) {
+                console.error("Email notification failed:", e.message);
             }
         }
 
         // send telegram
         if (provider === "telegram" && enabled) {
             try {
-                await sendTelegram({ message });
+                await sendTelegram({ message, parse_mode: 'Markdown' });
                 console.log("Telegram sent");
-            } catch (e) {
-                console.error("Telegram notification failed:", e);
+            } catch (e: any) {
+                console.error("Telegram notification failed:", e.message);
             }
         }
     }
@@ -40,7 +40,7 @@ function formatAlertMessage(alert: any) {
     return `
 🚨 *Suricata Alert Detected*
 
-• Severity: *${alert.severity.toUpperCase()}*
+• Severity: *${alert.severity}*
 • Signature: ${alert.signature}
 • Category: ${alert.category}
 • Source IP: ${alert.srcIp}

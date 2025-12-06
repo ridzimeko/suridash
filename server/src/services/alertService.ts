@@ -9,7 +9,6 @@ export async function saveAlert(json: any) {
   const IP = json.src_ip;
   const privateIpRanges = [
     /^10\./,
-    /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
     /^192\.168\./,
     /^127\./,
     /^169\.254\./,
@@ -31,6 +30,10 @@ export async function saveAlert(json: any) {
   }
 
   const geo = await fetchGeoIP(json.src_ip);
+  const statuses = {
+    isBlocked: false,
+    isNotified: false,
+  }
 
   const alert = {
     signature: json.alert?.signature ?? "Unknown",
@@ -62,16 +65,20 @@ export async function saveAlert(json: any) {
         autoBlocked: true,
       });
       alert.wasBlocked = true;
+      console.log(`Auto-blocked IP: ${IP}`);
     } catch (e) {
       console.error("Auto block failed:", e);
     }
   }
 
   if (alert.severity === 1 || alert.severity === 2) {
+    console.log("Sending notifications for alert:", IP);
     notifyAll(alert).catch((e) => {
       console.error("Notification failed:", e);
     });
   }
+
+  console.log("alert triggered:", alert.srcIp, "severity:", alert.severity, "blocked:", alert.wasBlocked);
 
   await db.insert(alerts).values(alert);
 }

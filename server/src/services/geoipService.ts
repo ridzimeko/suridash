@@ -35,8 +35,8 @@ export async function fetchGeoIP(ip: string) {
       org: res.org ?? null,
       timezone: res.timezone ?? null,
     };
-  } catch (err) {
-    console.error("GeoIP lookup error:", err);
+  } catch (err: any) {
+    console.error("GeoIP lookup error:", err.message);
     return null;
   }
 }
