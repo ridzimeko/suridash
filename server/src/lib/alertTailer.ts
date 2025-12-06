@@ -1,5 +1,5 @@
 import { Tail } from "tail";
-import { saveAlert } from "../services/alertService";
+import { saveAlert } from "../services/alertService.js";
 import fs from "fs";
 
 const wsClients = new Set<any>();

@@ -1,8 +1,8 @@
-import { db } from "@/db";
-import { alerts } from "@/db/schema/dashboard-schema";
-import { fetchGeoIP } from "./geoipService";
-import { blockIpAndRecord } from "./ipsetService";
-import { notifyAll } from "./notificationService";
+import { db } from "../db/index.js";
+import { alerts } from "../db/schema/dashboard-schema.js";
+import { fetchGeoIP } from "./geoipService.js";
+import { blockIpAndRecord } from "./ipsetService.js";
+import { notifyAll } from "./notificationService.js";
 
 export async function saveAlert(json: any) {
   // don't block private IPs

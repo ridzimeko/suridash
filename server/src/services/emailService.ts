@@ -1,5 +1,5 @@
-import { db } from "@/db";
-import { integrations } from "@/db/schema/dashboard-schema";
+import { db } from "../db/index.js";
+import { integrations } from "../db/schema/dashboard-schema.js";
 import { eq } from "drizzle-orm";
 
 type EmailParams = {

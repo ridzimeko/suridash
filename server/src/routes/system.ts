@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { authMiddleware } from "@/middlewares/auth-middleware";
-import type { AppEnv } from "../types";
-import { suricataStatus, suricataRestart } from "../services/suricataService";
+import { authMiddleware } from "../middlewares/auth-middleware.js";
+import type { AppEnv } from "../types/index.js";
+import { suricataStatus, suricataRestart } from "../services/suricataService.js";
 import si from "systeminformation";
 
 export const systemRoute = new Hono<AppEnv>();

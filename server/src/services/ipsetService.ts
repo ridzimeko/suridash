@@ -1,8 +1,8 @@
 // src/services/ipsetService.ts
 import { exec } from "child_process";
 import { promisify } from "util";
-import { db } from "@/db";
-import { blockedIps } from "@/db/schema/dashboard-schema";
+import { db } from "../db/index.js";
+import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { eq } from "drizzle-orm";
 
 const execp = promisify(exec);

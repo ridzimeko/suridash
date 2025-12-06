@@ -1,11 +1,11 @@
 import { Hono } from "hono";
-import type { AppEnv } from "../types";
-import { authMiddleware } from "@/middlewares/auth-middleware";
-import { db } from "../db";
-import { integrations } from "@/db/schema/dashboard-schema";
+import type { AppEnv } from "../types/index.js";
+import { authMiddleware } from "../middlewares/auth-middleware.js";
+import { db } from "../db/index.js";
+import { integrations } from "../db/schema/dashboard-schema.js";
 import { eq, desc } from "drizzle-orm";
-import { sendEmailBrevo } from "@/services/emailService";
-import { sendTelegram } from "@/services/telegramService";
+import { sendEmailBrevo } from "../services/emailService.js";
+import { sendTelegram } from "../services/telegramService.js";
 
 export const integrationsRoute = new Hono<AppEnv>();
 

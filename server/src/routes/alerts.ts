@@ -1,9 +1,9 @@
 import { Hono } from "hono";
-import { db } from "@/db";
-import { alerts } from "@/db/schema/dashboard-schema";
+import { db } from "../db/index.js";
+import { alerts } from "../db/schema/dashboard-schema.js";
 import { asc, desc, and, eq, sql } from "drizzle-orm";
-import type { AppEnv } from "@/types";
-import { authMiddleware } from "@/middlewares/auth-middleware";
+import type { AppEnv } from "../types/index.js";
+import { authMiddleware } from "../middlewares/auth-middleware.js";
 
 export const alertsRoute = new Hono<AppEnv>();
 

@@ -1,7 +1,7 @@
-import { sendEmailBrevo } from "./emailService";
-import { sendTelegram } from "./telegramService";
-import { db } from "@/db";
-import { integrations } from "@/db/schema/dashboard-schema";
+import { sendEmailBrevo } from "./emailService.js";
+import { sendTelegram } from "./telegramService.js";
+import { db } from "../db/index.js";
+import { integrations } from "../db/schema/dashboard-schema.js";
 
 export async function notifyAll(alert: any) {
     const configs = await db.select().from(integrations);

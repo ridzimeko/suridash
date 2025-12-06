@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "../lib/auth.js";
 
 async function seed() {
   console.log("➡ Creating seed admin user...");

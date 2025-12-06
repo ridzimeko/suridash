@@ -1,7 +1,7 @@
-import { db } from "@/db";
-import { blockedIps } from "@/db/schema/dashboard-schema";
+import { db } from "../db/index.js";
+import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { and, lt } from "drizzle-orm";
-import { unblockIp } from "@/services/ipsetService";
+import { unblockIp } from "../services/ipsetService.js";
 
 export function startIpsetScheduler(intervalMs = 60_000) {
   // run periodically

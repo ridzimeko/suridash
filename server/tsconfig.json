@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "bundler",
+    "module": "nodenext",
     "strict": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
@@ -13,11 +12,6 @@
     "jsxImportSource": "hono/jsx",
     "outDir": "./dist",
     "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    }
   },
   "exclude": ["node_modules"]
 }

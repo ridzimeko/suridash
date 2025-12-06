@@ -1,15 +1,15 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import auth from "@/routes/auth";
-import { alertsRoute } from './routes/alerts';
-import type { AppEnv } from './types';
+import auth from "./routes/auth.js";
+import { alertsRoute } from './routes/alerts.js';
+import type { AppEnv } from './types/index.js';
 import { cors } from 'hono/cors';
-import { analyticsRoute } from './routes/analytics';
-import { integrationsRoute } from './routes/integrations';
-import { systemRoute } from './routes/system';
+import { analyticsRoute } from './routes/analytics.js';
+import { integrationsRoute } from './routes/integrations.js';
+import { systemRoute } from './routes/system.js';
 import { createNodeWebSocket } from '@hono/node-ws';
-import { startAlertTailer } from "@/lib/alertTailer";
-import { startIpsetScheduler } from './lib/ipsetScheduler';
+import { startAlertTailer } from "./lib/alertTailer.js";
+import { startIpsetScheduler } from './lib/ipsetScheduler.js';
 
 const app = new Hono<AppEnv>({
   strict: false,

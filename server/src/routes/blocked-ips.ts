@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-import type { AppEnv } from "../types";
-import { authMiddleware } from "@/middlewares/auth-middleware";
-import { db } from "../db";
-import { blockedIps } from "@/db/schema/dashboard-schema";
+import type { AppEnv } from "../types/index.js";
+import { authMiddleware } from "../middlewares/auth-middleware.js";
+import { db } from "../db/index.js";
+import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { desc, eq, and, sql } from "drizzle-orm";
-import { unblockIp } from "@/services/ipsetService";
+import { unblockIp } from "../services/ipsetService.js";
 
 export const blockedRoute = new Hono<AppEnv>();
 
