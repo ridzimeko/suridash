@@ -1,18 +1,20 @@
 import { Routes as LibRoutes, Route } from "react-router"
-import Dashboard from "@/pages/Dashboard"
-import LoginPage from "@/pages/Login"
-import RealtimeAlerts from '@/pages/RealtimeAlerts';
-import AttackMap from '@/pages/AttackMap';
-import ChartsAnalytics from '@/pages/ChartsAnalytics';
-import RulesEditor from '@/pages/RulesEditor';
-import BlockHistory from '@/pages/BlockHistory';
-import SystemLogs from '@/pages/SystemLogs';
-import Settings from '@/pages/Settings';
-import Integration from '@/pages/Integration';
 import NotFound from '@/pages/NotFound';
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import React from "react";
 
 export default function Routes() {
+    const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+    const RealtimeAlerts = React.lazy(() => import('@/pages/RealtimeAlerts'));
+    const AttackMap = React.lazy(() => import('@/pages/AttackMap'));
+    const ChartsAnalytics = React.lazy(() => import('@/pages/ChartsAnalytics'));
+    const RulesEditor = React.lazy(() => import('@/pages/RulesEditor'));
+    const BlockHistory = React.lazy(() => import('@/pages/BlockHistory'));
+    const SystemLogs = React.lazy(() => import('@/pages/SystemLogs'));
+    const Settings = React.lazy(() => import('@/pages/Settings'));
+    const Integration = React.lazy(() => import('@/pages/Integration'));
+    const LoginPage = React.lazy(() => import('@/pages/Login'));
+
     return (
         <LibRoutes>
             <Route element={<DashboardLayout />}>

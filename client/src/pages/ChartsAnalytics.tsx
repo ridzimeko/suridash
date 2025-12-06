@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
   Bar,
@@ -16,13 +16,19 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-} from 'recharts';
-import { mockAttackStats, mockTimelineData } from '@/lib/mockData';
+} from "recharts";
+import { mockTimelineData } from "@/lib/mockData";
 
-const COLORS = ['#f97316', '#eab308', '#3b82f6', '#ef4444', '#8b5cf6'];
+const COLORS = ["#f97316", "#eab308", "#3b82f6", "#ef4444", "#8b5cf6"];
 
 export default function ChartsAnalytics() {
-  const [attackStats] = useState(mockAttackStats);
+  const [attackStats] = useState([
+    { type: "DDoS", count: 456, percentage: 36.5 },
+    { type: "Port Scanning", count: 312, percentage: 25.0 },
+    { type: "Brute Force", count: 289, percentage: 23.2 },
+    { type: "Malware", count: 123, percentage: 9.9 },
+    { type: "Other", count: 67, percentage: 5.4 },
+  ]);
   const [timelineData] = useState(mockTimelineData);
 
   return (
@@ -49,9 +55,11 @@ export default function ChartsAnalytics() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `${entry.type}: ${entry.percentage}%`}
+                  label={(entry) =>
+                    `${entry.payload.type}: ${entry.payload.percentage}%`
+                  }
                 >
-                  {attackStats.map((entry, index) => (
+                  {attackStats.map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}

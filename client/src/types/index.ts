@@ -110,3 +110,10 @@ export interface AuthUser {
   name: string;
   image?: string | null;
 };
+
+export interface Integration {
+  id: number;
+  enabled: boolean;
+  provider: string;
+  config: Record<string, unknown>;
+}

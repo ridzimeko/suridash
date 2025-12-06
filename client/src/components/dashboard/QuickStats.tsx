@@ -22,7 +22,7 @@ export default function QuickStats({ recentAlerts }: QuickStatsProps) {
               <div className="space-y-1">
                 <p className="text-sm font-medium">{alert.signature}</p>
                 <p className="text-xs text-muted-foreground">
-                  {alert.sourceIP} → {alert.destIP}
+                  {alert.srcIp} → {alert.destIp}
                 </p>
               </div>
               <div className="text-right">
@@ -31,16 +31,16 @@ export default function QuickStats({ recentAlerts }: QuickStatsProps) {
                 </p>
                 <span
                   className={`text-xs font-medium ${
-                    alert.severity === 'critical'
+                    alert.severity === 1
                       ? 'text-red-500'
-                      : alert.severity === 'high'
+                      : alert.severity === 2
                       ? 'text-orange-500'
-                      : alert.severity === 'medium'
+                      : alert.severity === 3
                       ? 'text-yellow-500'
                       : 'text-blue-500'
                   }`}
                 >
-                  {alert.severity.toUpperCase()}
+                  {alert.severity}
                 </span>
               </div>
             </div>

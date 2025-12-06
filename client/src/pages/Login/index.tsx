@@ -2,6 +2,7 @@ import { login } from "@/services/auth";
 import { Activity } from "lucide-react";
 import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 
 export default function LoginPage(): ReactElement {
     const {
@@ -11,7 +12,9 @@ export default function LoginPage(): ReactElement {
     } = useForm();
 
     const [serverError, setServerError] = useState("");
+    const navigate = useNavigate();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function onSubmit(data: any) {
         setServerError("");
 
@@ -19,7 +22,8 @@ export default function LoginPage(): ReactElement {
             const res = await login(data.email, data.password);
             console.log("Login success:", res);
 
-            window.location.href = "/";
+            navigate("/");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             const msg =
                 err?.response?.data?.error ??
@@ -73,7 +77,7 @@ export default function LoginPage(): ReactElement {
                             })}
                         />
                         {errors.email && (
-                            <p className="text-red-500 text-sm">{errors.email.message}</p>
+                            <p className="text-red-500 text-sm">{errors.email.message?.toString()}</p>
                         )}
                     </div>
 
@@ -90,7 +94,7 @@ export default function LoginPage(): ReactElement {
                             })}
                         />
                         {errors.password && (
-                            <p className="text-red-500 text-sm">{errors.password.message}</p>
+                            <p className="text-red-500 text-sm">{errors.password.message?.toString()}</p>
                         )}
                     </div>
 

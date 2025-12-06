@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { mockAlerts } from '@/lib/mockData';
-import type { Alert, SeverityLevel } from '@/types';
+import type { Alert } from '@/types';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -19,13 +19,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const createCustomIcon = (severity: SeverityLevel) => {
+const createCustomIcon = (severity: number) => {
   const color =
-    severity === 'critical'
+    severity === 1
       ? '#ef4444'
-      : severity === 'high'
+      : severity === 2
         ? '#f97316'
-        : severity === 'medium'
+        : severity === 3
           ? '#eab308'
           : '#3b82f6';
 
@@ -55,15 +55,15 @@ function MapUpdater({ alerts }: { alerts: Alert[] }) {
 export default function AttackMap() {
   const [alerts] = useState<Alert[]>(mockAlerts);
 
-  const getSeverityColor = (severity: SeverityLevel) => {
+  const getSeverityColor = (severity: number) => {
     switch (severity) {
-      case 'critical':
+      case 1:
         return 'bg-red-500';
-      case 'high':
+      case 2:
         return 'bg-orange-500';
-      case 'medium':
+      case 3:
         return 'bg-yellow-500';
-      case 'low':
+      case 4:
         return 'bg-blue-500';
     }
   };
@@ -84,7 +84,7 @@ export default function AttackMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {alerts.filter((a) => a.severity === 'critical').length}
+              {alerts.filter((a) => a.severity === 1).length}
             </div>
           </CardContent>
         </Card>
@@ -94,7 +94,7 @@ export default function AttackMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {alerts.filter((a) => a.severity === 'high').length}
+              {alerts.filter((a) => a.severity === 2).length}
             </div>
           </CardContent>
         </Card>
@@ -104,7 +104,7 @@ export default function AttackMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {alerts.filter((a) => a.severity === 'medium').length}
+              {alerts.filter((a) => a.severity === 3).length}
             </div>
           </CardContent>
         </Card>
@@ -114,7 +114,7 @@ export default function AttackMap() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {alerts.filter((a) => a.severity === 'low').length}
+              {alerts.filter((a) => a.severity === 4).length}
             </div>
           </CardContent>
         </Card>
@@ -151,7 +151,7 @@ export default function AttackMap() {
                       </Badge>
                       <div className="text-sm space-y-1">
                         <p>
-                          <strong>IP:</strong> {alert.sourceIP}
+                          <strong>IP:</strong> {alert.srcIp}
                         </p>
                         <p>
                           <strong>Category:</strong> {alert.category}

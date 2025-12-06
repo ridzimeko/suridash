@@ -36,13 +36,14 @@ export default function Integration() {
      LOAD CONFIG FROM DATABASE
   ------------------------------------------------*/
   useEffect(() => {
-    getIntegrations().then((data: any[]) => {
+    getIntegrations().then((data) => {
       data.forEach((row) => {
         if (row.provider === "brevo") {
           setEmailId(row.id);
           setEmailConfig({
             enabled: row.enabled,
-            config: row.config,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            config: row.config as any,
           });
         }
 
@@ -50,7 +51,8 @@ export default function Integration() {
           setTelegramId(row.id);
           setTelegramConfig({
             enabled: row.enabled,
-            config: row.config,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            config: row.config as any,
           });
         }
       });
@@ -78,6 +80,7 @@ export default function Integration() {
 
       toast.success("Settings saved!");
     } catch (err) {
+      console.error(err);
       toast.error("Failed to save settings");
     }
   };
@@ -95,7 +98,7 @@ export default function Integration() {
         bot_token: telegramConfig.config.bot_token,
         chat_id: telegramConfig.config.chat_id
       };
-      const res = await testIntegration(provider, config);
+      const res = await testIntegration(provider, config) as { message?: string };
       toast.dismiss();
       toast.success(res.message ?? "Test success!");
     } catch {

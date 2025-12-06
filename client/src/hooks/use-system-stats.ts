@@ -18,6 +18,9 @@ export function useSystemStats(interval = 1000) {
         const data = await api.get("system/stats").json() as {
           cpu: number;
           memory: number;
+          totalRam: number;
+          usedRam: number;
+          freeRam: number;
           networkIn: number;
           networkOut: number;
         };

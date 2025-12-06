@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
+import type { Integration } from "@/types";
 
-export async function getIntegrations() {
+export async function getIntegrations(): Promise<Integration[]> {
   return api.get("integrations").json();
 }
 
@@ -20,7 +21,8 @@ export async function saveIntegration(provider: string, config: any, enabled: bo
 }
 
 // test email or telegram
-export async function testIntegration(provider: string, config: unknown) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function testIntegration(provider: string, config: any) {
   return api.post("integrations/test", {
     json: { provider, config },
   }).json();
