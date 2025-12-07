@@ -60,6 +60,7 @@ export interface BlockedIP {
   countryCode: string;
   reason: string;
   blockedAt: Date;
+  createdAt: Date;
   duration: string;
   alertCount: number;
 }
