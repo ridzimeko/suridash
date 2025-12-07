@@ -9,21 +9,28 @@ type TelegramParams = {
   message: string;
 };
 
+type TelegramConfig = {
+  bot_token?: string;
+  chat_id?: string;
+};
+
 export async function sendTelegram({ message, parse_mode = 'HTML' }: TelegramParams, isTest = false) {
   const [tg] = await db
     .select()
     .from(integrations)
     .where(eq(integrations.provider, "telegram"));
+  
+  const config : TelegramConfig = tg?.config || {};
 
   if (!tg?.enabled && !isTest) return;
-  const bot_token = tg?.config?.bot_token;
+  const bot_token = config.bot_token;
   if (!bot_token) throw new Error("Telegram bot token not configured");
 
   const res = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      chat_id: tg?.config?.chat_id,
+      chat_id: config.chat_id,
       text: message,
       parse_mode,
     }),
