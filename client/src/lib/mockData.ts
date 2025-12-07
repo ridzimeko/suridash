@@ -1,4 +1,4 @@
-import type { Alert, Rule, LogEntry, SystemStats, AttackStats, TimelineData } from '@/types';
+import type { Alert, Rule, LogEntry, SystemStats, BlockedIP, AttackStats, TimelineData } from '@/types';
 
 // Mock Alerts Data
 export const mockAlerts: Alert[] = [
@@ -205,38 +205,38 @@ export const mockSystemStats: SystemStats = {
 };
 
 // Mock Blocked IPs
-// export const mockBlockedIPs: BlockedIP[] = [
-//   {
-//     id: '1',
-//     ip: '185.220.101.45',
-//     country: 'Russia',
-//     countryCode: 'RU',
-//     reason: 'DDoS Attack - Multiple NTP requests',
-//     blockedAt: new Date(Date.now() - 1000 * 60 * 30),
-//     duration: 'Permanent',
-//     alertCount: 156,
-//   },
-//   {
-//     id: '2',
-//     ip: '103.248.70.123',
-//     country: 'China',
-//     countryCode: 'CN',
-//     reason: 'Port Scanning - SSH scan detected',
-//     blockedAt: new Date(Date.now() - 1000 * 60 * 45),
-//     duration: '24 hours',
-//     alertCount: 89,
-//   },
-//   {
-//     id: '3',
-//     ip: '45.142.212.61',
-//     country: 'Netherlands',
-//     countryCode: 'NL',
-//     reason: 'Brute Force - Multiple failed SSH logins',
-//     blockedAt: new Date(Date.now() - 1000 * 60 * 60),
-//     duration: '12 hours',
-//     alertCount: 234,
-//   },
-// ];
+export const mockBlockedIPs: BlockedIP[] = [
+  {
+    id: '1',
+    ip: '185.220.101.45',
+    country: 'Russia',
+    countryCode: 'RU',
+    reason: 'DDoS Attack - Multiple NTP requests',
+    blockedAt: new Date(Date.now() - 1000 * 60 * 30),
+    duration: 'Permanent',
+    alertCount: 156,
+  },
+  {
+    id: '2',
+    ip: '103.248.70.123',
+    country: 'China',
+    countryCode: 'CN',
+    reason: 'Port Scanning - SSH scan detected',
+    blockedAt: new Date(Date.now() - 1000 * 60 * 45),
+    duration: '24 hours',
+    alertCount: 89,
+  },
+  {
+    id: '3',
+    ip: '45.142.212.61',
+    country: 'Netherlands',
+    countryCode: 'NL',
+    reason: 'Brute Force - Multiple failed SSH logins',
+    blockedAt: new Date(Date.now() - 1000 * 60 * 60),
+    duration: '12 hours',
+    alertCount: 234,
+  },
+];
 
 // Mock Attack Stats
 export const mockAttackStats: AttackStats[] = [
