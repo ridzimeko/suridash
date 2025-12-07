@@ -67,13 +67,14 @@ export const blockedIps = pgTable(
     isActive: boolean("is_active").default(true).notNull(),
 
     // Sumber rule block (firewalld / iptables)
-    source: varchar("source", { length: 32 }).default("firewalld"),
+    // source: varchar("source", { length: 32 }).default("firewalld"),
+    alert_count: integer("alert_count").default(0).notNull(),
+
+    country: varchar("country", { length: 2 }),
+    city: varchar("city", { length: 128 }),
 
     // Jika kamu ingin tahu apakah auto-block atau manual admin
     autoBlocked: boolean("auto_blocked").default(true).notNull(),
-
-    // optional: relasi ke user admin (Better Auth user)
-    // userId: varchar("user_id", { length: 255 }), // nanti bisa refer ke auth.users.id
   },
   (table) => ({
     idxBlockedIp: index("idx_blocked_ips_ip").on(table.ip),

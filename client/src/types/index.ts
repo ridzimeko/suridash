@@ -59,7 +59,8 @@ export interface BlockedIP {
   country: string;
   countryCode: string;
   reason: string;
-  blockedAt: Date;
+  createdAt: Date;
+  blockedUntil: Date;
   duration: string;
   alertCount: number;
 }
