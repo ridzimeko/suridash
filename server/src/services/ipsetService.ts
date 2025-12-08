@@ -77,6 +77,23 @@ export async function blockIpAndRecord(opts: {
 
   const blockedUntil = ttlMinutes ? new Date(Date.now() + ttlMinutes * 60_000) : null;
 
+  const existingBlock = await db
+    .select()
+    .from(blockedIps)
+    .where((b) => eq(b.ip, ip))
+    .limit(1);
+
+  if (existingBlock.length > 0) {
+    const updateCount = await db
+      .update(blockedIps)
+      .set({
+        alertCount: existingBlock[0].alertCount + 1,
+      })
+      .where(eq(blockedIps.ip, ip)).returning();
+    console.log(`Updated ${updateCount} existing block record(s) for IP:`, ip);
+    return existingBlock[0];
+  }
+
   const inserted = await db.insert(blockedIps).values({
     ip,
     reason,

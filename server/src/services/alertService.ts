@@ -65,23 +65,6 @@ export async function saveAlert(json: any) {
   // Auto-block rules
   if (IP && (alert.severity === 1 || alert.severity === 2)) {
     try {
-      const existingBlock = await db
-        .select()
-        .from(blockedIps)
-        .where((b) => eq(b.ip, IP))
-        .limit(1);
-
-      if (existingBlock.length > 0) {
-        const updateCount = await db
-          .update(blockedIps)
-          .set({
-            alertCount: existingBlock[0].alertCount + 1,
-          })
-          .where(eq(blockedIps.ip, IP));
-        console.log(`Updated ${updateCount} existing block record(s) for IP:`, IP);
-        return;
-      }
-
       // block selama 60 menit misalnya
       await blockIpAndRecord({
         ip: IP,
