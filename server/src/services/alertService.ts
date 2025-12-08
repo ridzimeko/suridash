@@ -66,7 +66,7 @@ export async function saveAlert(json: any) {
   if (IP && (alert.severity === 1 || alert.severity === 2)) {
     try {
       // block selama 60 menit misalnya
-      const blocked = await blockIpAndRecord({
+      await blockIpAndRecord({
         ip: IP,
         reason: `Auto block for ${severityMap[alert.severity as keyof typeof severityMap] ?? 'unknown'}`,
         attackType: json.alert?.category,
@@ -79,12 +79,10 @@ export async function saveAlert(json: any) {
       console.log(`Auto-blocked IP: ${IP}`);
 
       // Notify admins
-      if (blocked.isNew) {
-        console.log("Sending notifications for alert:", IP);
-        notifyAll(alert).catch((e) => {
-          console.error("Notification failed:", e);
-        });
-      }
+      console.log("Sending notifications for alert:", IP);
+      notifyAll(alert).catch((e) => {
+        console.error("Notification failed:", e);
+      });
     } catch (e) {
       console.error("Auto block failed:", e);
     }
