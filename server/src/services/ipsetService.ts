@@ -91,7 +91,10 @@ export async function blockIpAndRecord(opts: {
       })
       .where(eq(blockedIps.ip, ip)).returning();
     console.log(`Updated ${updateCount} existing block record(s) for IP:`, ip);
-    return existingBlock[0];
+    return {
+      data: existingBlock[0],
+      isNew: false,
+    };
   }
 
   const inserted = await db.insert(blockedIps).values({
@@ -106,7 +109,10 @@ export async function blockIpAndRecord(opts: {
     autoBlocked,
   }).returning();
 
-  return inserted[0];
+  return {
+    data: inserted[0],
+    isNew: true,
+  };
 }
 
 /** Unblock (DB + ipset) */
