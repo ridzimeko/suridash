@@ -129,6 +129,7 @@ export default function BlockHistory() {
               <TableRow>
                 <TableHead>IP Address</TableHead>
                 <TableHead>Country</TableHead>
+                <TableHead>City</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Blocked At</TableHead>
                 <TableHead>Duration</TableHead>
@@ -148,6 +149,8 @@ export default function BlockHistory() {
                       <span>{ip.country}</span>
                     </div>
                   </TableCell>
+
+                  <TableCell>{ip.city}</TableCell>
 
                   <TableCell>{ip.reason}</TableCell>
 

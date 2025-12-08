@@ -57,6 +57,7 @@ export interface BlockedIP {
   id: string;
   ip: string;
   country: string;
+  city: string;
   countryCode: string;
   reason: string;
   createdAt: Date;

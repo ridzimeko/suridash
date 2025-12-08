@@ -36,6 +36,9 @@ export const alerts = pgTable(
     city: varchar("city", { length: 128 }),
     latitude: varchar("latitude", { length: 32 }),
     longitude: varchar("longitude", { length: 32 }),
+    asNumber: varchar("as_number", { length: 32 }),
+    asName: varchar("as_name", { length: 256 }),
+    // as_domain: varchar("as_domain", { length: 256 }),
 
     // Flag apakah IP ini sempat diblok
     wasBlocked: boolean("was_blocked").default(false).notNull(),
@@ -68,7 +71,7 @@ export const blockedIps = pgTable(
 
     // Sumber rule block (firewalld / iptables)
     // source: varchar("source", { length: 32 }).default("firewalld"),
-    alert_count: integer("alert_count").default(0).notNull(),
+    alertCount: integer("alert_count").default(0).notNull(),
 
     country: varchar("country", { length: 2 }),
     city: varchar("city", { length: 128 }),

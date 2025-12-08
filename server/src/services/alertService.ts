@@ -31,9 +31,15 @@ export async function saveAlert(json: any) {
   }
 
   const geo = await fetchGeoIP(json.src_ip);
-  const statuses = {
-    isBlocked: false,
-    isNotified: false,
+
+  function getASN(orgString: string) {
+    const match = orgString.match(/(AS\d+)/i);
+    return match ? match[1] : null;
+  }
+
+  function getASName(orgString: string) {
+    const match = orgString.match(/AS\d+\s+(.*)/i);
+    return match ? match[1] : null;
   }
 
   const alert = {
@@ -51,6 +57,8 @@ export async function saveAlert(json: any) {
     city: geo?.city ?? null,
     latitude: geo?.latitude ? geo.latitude.toString() : null,
     longitude: geo?.longitude ? geo.longitude.toString() : null,
+    as_number: getASN(geo?.org),
+    as_name: getASName(geo?.org),
     wasBlocked: false,
   };
 
@@ -67,12 +75,12 @@ export async function saveAlert(json: any) {
         const updateCount = await db
           .update(blockedIps)
           .set({
-            alert_count: existingBlock[0].alert_count + 1,
+            alertCount: existingBlock[0].alertCount + 1,
           })
           .where(eq(blockedIps.ip, IP));
         console.log(`Updated ${updateCount} existing block record(s) for IP:`, IP);
         return;
-      } 
+      }
 
       // block selama 60 menit misalnya
       await blockIpAndRecord({

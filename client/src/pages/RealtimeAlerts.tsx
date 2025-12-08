@@ -152,11 +152,19 @@ const columns: ColumnDef<Alert>[] = [
             <div className="font-mono text-xs">{row.getValue('srcIp')}</div>
         ),
     },
+
     {
-        accessorKey: 'destIp',
-        header: 'Dest IP',
+        accessorKey: 'city',
+        header: 'City',
         cell: ({ row }) => (
-            <div className="font-mono text-xs">{row.getValue('destIp')}</div>
+            <div className="font-mono text-xs">{row.getValue('city')}</div>
+        ),
+    },
+    {
+        accessorKey: 'asName',
+        header: 'AS Name',
+        cell: ({ row }) => (
+            <div className="font-mono text-xs">{row.getValue('asName')}</div>
         ),
     },
     {
@@ -167,10 +175,10 @@ const columns: ColumnDef<Alert>[] = [
         ),
     },
     {
-        accessorKey: 'blocked',
+        accessorKey: 'wasBlocked',
         header: 'Status',
         cell: ({ row }) => {
-            const blocked = row.getValue('blocked') as boolean;
+            const blocked = row.getValue('wasBlocked') as boolean;
             return blocked ? (
                 <Badge variant="destructive">Blocked</Badge>
             ) : (
