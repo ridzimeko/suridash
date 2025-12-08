@@ -57,8 +57,10 @@ export async function blockIpAndRecord(opts: {
   attackType?: string;
   ttlMinutes?: number; // optional
   autoBlocked?: boolean;
+  city?: string | null;
+  country?: string | null;
 }) {
-  const { ip, reason = "auto block", attackType = "unknown", ttlMinutes, autoBlocked = true } = opts;
+  const { ip, reason = "auto block", attackType = "unknown", ttlMinutes, autoBlocked = true, city = null, country = null } = opts;
 
   // skip private/local
   if (
@@ -79,10 +81,12 @@ export async function blockIpAndRecord(opts: {
     ip,
     reason,
     attackType,
+    createdAt: new Date(),
     blockedUntil,
+    city,
+    country,
     isActive: true,
     autoBlocked,
-    source: "ipset",
   }).returning();
 
   return inserted[0];

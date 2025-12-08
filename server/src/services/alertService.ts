@@ -1,5 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { alerts } from "../db/schema/dashboard-schema.js";
+import { alerts, blockedIps } from "../db/schema/dashboard-schema.js";
 import { fetchGeoIP } from "./geoipService.js";
 import { blockIpAndRecord } from "./ipsetService.js";
 import { notifyAll } from "./notificationService.js";
@@ -56,6 +57,23 @@ export async function saveAlert(json: any) {
   // Auto-block rules
   if (IP && (alert.severity === 1 || alert.severity === 2)) {
     try {
+      const existingBlock = await db
+        .select()
+        .from(blockedIps)
+        .where((b) => eq(b.ip, IP))
+        .limit(1);
+
+      if (existingBlock.length > 0) {
+        const updateCount = await db
+          .update(blockedIps)
+          .set({
+            alert_count: existingBlock[0].alert_count + 1,
+          })
+          .where(eq(blockedIps.ip, IP));
+        console.log(`Updated ${updateCount} existing block record(s) for IP:`, IP);
+        return;
+      } 
+
       // block selama 60 menit misalnya
       await blockIpAndRecord({
         ip: IP,
@@ -63,15 +81,15 @@ export async function saveAlert(json: any) {
         attackType: json.alert?.category,
         ttlMinutes: 60,
         autoBlocked: true,
+        city: alert.city,
+        country: alert.country,
       });
       alert.wasBlocked = true;
       console.log(`Auto-blocked IP: ${IP}`);
     } catch (e) {
       console.error("Auto block failed:", e);
     }
-  }
 
-  if (alert.severity === 1 || alert.severity === 2) {
     console.log("Sending notifications for alert:", IP);
     notifyAll(alert).catch((e) => {
       console.error("Notification failed:", e);

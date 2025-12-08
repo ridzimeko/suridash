@@ -81,10 +81,13 @@ blockedRoute.post("/blocked-ips", async (c) => {
       ip: body.ip,
       reason: body.reason ?? "Manual block",
       attackType: body.attackType ?? "Unknown",
+      createdAt: new Date(),
       blockedUntil: body.blockedUntil ? new Date(body.blockedUntil) : null,
       isActive: true,
       autoBlocked: false,
-      source: "manual",
+      alert_count: 0,
+      city: body.city ?? null,
+      country: body.country ?? null,
     })
     .returning();
 
