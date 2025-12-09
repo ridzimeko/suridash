@@ -12,24 +12,33 @@ export default function LoginPage(): ReactElement {
     } = useForm();
 
     const [serverError, setServerError] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function onSubmit(data: any) {
         setServerError("");
+        setLoading(true);
 
         try {
             const res = await login(data.email, data.password);
-            console.log("Login success:", res);
+            
+            if (res.error) {
+                throw new Error(res.error.message);
+            }
 
-            navigate("/");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setTimeout(() => {
+                navigate("/", { replace: true });
+            }, 50);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             const msg =
                 err?.response?.data?.error ??
                 "Login gagal, periksa email & password.";
 
             setServerError(msg);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -101,7 +110,8 @@ export default function LoginPage(): ReactElement {
                     {/* BUTTON LOGIN */}
                     <button
                         type="submit"
-                        className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 rounded-lg duration-150"
+                        disabled={loading}
+                        className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 disabled:bg-indigo-600/55 disabled:cursor-not-allowed rounded-lg duration-150"
                     >
                         Sign in
                     </button>

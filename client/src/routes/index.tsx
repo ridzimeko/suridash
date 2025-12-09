@@ -2,6 +2,7 @@ import { Routes as LibRoutes, Route } from "react-router"
 import NotFound from '@/pages/NotFound';
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import React from "react";
+import GuestRoute from "@/components/GuestRoute";
 
 export default function Routes() {
     const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
@@ -29,7 +30,9 @@ export default function Routes() {
                 <Route path="/integration" element={<Integration />} />
             </Route>
 
-            <Route path="/login" element={<LoginPage />} />
+            <Route element={<GuestRoute />}>
+                <Route path="/login" element={<LoginPage />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
         </LibRoutes>
     )

@@ -11,7 +11,7 @@ export default function DashboardLayout(): React.ReactElement {
         return <div>Loading...</div>;
     }
 
-    if (!user) {
+    if (!loading && !user) {
         return <Navigate to="/login" replace />;
     }
 

@@ -1,16 +1,14 @@
 // frontend/src/services/auth.js
+import { authClient } from "@/lib/auth-client";
 import { api } from "../lib/api";
 
 // ⬅ Login user
 export async function login(email: string, password: string) {
-  return api
-    .post("auth/sign-in/email", {
-      json: {
-        email,
-        password,
-      },
-    })
-    .json();
+  const res = await authClient.signIn.email({
+    email,
+    password,
+  })
+  return res;
 }
 
 // ⬅ Logout user
