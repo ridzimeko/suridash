@@ -8,8 +8,9 @@
   packages = [
     pkgs.nodejs_24
     pkgs.pnpm
+    pkgs.python312
+    pkgs.python312Packages.pip
     # pkgs.go
-    # pkgs.python311
     # pkgs.python311Packages.pip
     # pkgs.nodejs_20
     # pkgs.nodePackages.nodemon
