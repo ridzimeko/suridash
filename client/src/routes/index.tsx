@@ -14,6 +14,7 @@ export default function Routes() {
     const SystemLogs = React.lazy(() => import('@/pages/SystemLogs'));
     const Settings = React.lazy(() => import('@/pages/Settings'));
     const Integration = React.lazy(() => import('@/pages/Integration'));
+    const AgentManagement = React.lazy(() => import('@/pages/AgentManagement'));
     // const LoginPage = React.lazy(() => import('@/pages/Login'));
 
     return (
@@ -28,6 +29,7 @@ export default function Routes() {
                 <Route path="/system-logs" element={<SystemLogs />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/integration" element={<Integration />} />
+                <Route path="/agents" element={<AgentManagement />} />
             </Route>
 
             <Route path="/login" element={<LoginPage />} />

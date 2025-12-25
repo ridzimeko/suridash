@@ -11,17 +11,19 @@ import {
   Settings,
   Plug,
   Activity,
+  HardDrive,
 } from 'lucide-react';
 
 const menuItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/realtime-alerts', icon: Bell, label: 'Realtime Alerts' },
-  { path: '/attack-map', icon: Map, label: 'Attack Map' },
+  // { path: '/attack-map', icon: Map, label: 'Attack Map' },
   { path: '/charts-analytics', icon: BarChart3, label: 'Charts & Analytics' },
-  { path: '/rules-editor', icon: FileCode, label: 'Rules Editor' },
+  // { path: '/rules-editor', icon: FileCode, label: 'Rules Editor' },
   { path: '/block-history', icon: Shield, label: 'Block History' },
-  { path: '/system-logs', icon: FileText, label: 'System Logs' },
-  { path: '/settings', icon: Settings, label: 'Settings' },
+  // { path: '/system-logs', icon: FileText, label: 'System Logs' },
+  { path: '/agents', icon: HardDrive, label: 'Manage Agents' },
+  // { path: '/settings', icon: Settings, label: 'Settings' },
   { path: '/integration', icon: Plug, label: 'Integration' },
 ];
 
