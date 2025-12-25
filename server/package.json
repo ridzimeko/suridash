@@ -5,7 +5,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/src/index.js",
-    "seed:user": "tsx src/scripts/seed-user.ts"
+    "seed:user": "tsx src/scripts/seed-user.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
@@ -16,6 +18,7 @@
     "drizzle-orm": "^0.44.7",
     "hono": "^4.10.7",
     "ky": "^1.14.0",
+    "postgres": "^3.4.7",
     "systeminformation": "^5.27.11",
     "tail": "^2.2.6",
     "ws": "^8.18.3"
