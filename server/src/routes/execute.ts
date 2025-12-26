@@ -1,56 +1,38 @@
-import { Hono } from "hono";
-import { sendCommandToAgent } from "./ws/agent.js";
-import { db } from "src/db/index.js";
-import { blockedIps } from "src/db/schema/dashboard-schema.js";
+import { Router } from "express";
+import { sendCommandToAgent } from "../ws/agent.js";
+import { db } from "../db/index.js";
+import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { eq } from "drizzle-orm";
 
-export const executeRoute = new Hono();
+const router = Router();
 
-executeRoute.post("/execute/block", async (c) => {
-    const { blockedIpId, agentId } = await c.req.json();
-  
-    // ambil data block
-    const blocked = await db.query.blockedIps.findFirst({
-      where: eq(blockedIps.id, blockedIpId),
-    });
-  
-    if (!blocked) {
-      return c.json({ error: "Blocked IP not found" }, 404);
-    }
-  
-    // kirim ke agent
-    const sent = sendCommandToAgent(agentId, {
-      type: "block_ip",
-      ip: blocked.ip,
-      duration: blocked.blockedUntil
-        ? Math.floor(
-            (blocked.blockedUntil.getTime() - Date.now()) / 1000
-          )
-        : 3600,
-    });
-  
-    if (!sent) {
-      await db
-        .update(blockedIps)
-        .set({
-          executionStatus: "failed",
-          executionError: "Agent offline",
-        })
-        .where(eq(blockedIps.id, blockedIpId));
-  
-      return c.json({ error: "Agent offline" }, 409);
-    }
-  
-    // ✅ EXECUTE BERHASIL → UPDATE LOG
-    await db
-      .update(blockedIps)
-      .set({
-        executionStatus: "executed",
-        executedAt: new Date(),
-        agentId,
-      })
-      .where(eq(blockedIps.id, blockedIpId));
-  
-    return c.json({ success: true });
+router.post("/block", async (req, res) => {
+  const { blockedIpId, agentId } = req.body;
+
+  const blocked = await db.query.blockedIps.findFirst({
+    where: eq(blockedIps.id, blockedIpId),
   });
-  
+
+  if (!blocked) {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  const sent = sendCommandToAgent(agentId, {
+    type: "block_ip",
+    ip: blocked.ip,
+    duration: 3600,
+  });
+
+  if (!sent) {
+    return res.status(409).json({ error: "Agent offline" });
+  }
+
+  await db
+    .update(blockedIps)
+    .set({ executionStatus: "executed", executedAt: new Date() })
+    .where(eq(blockedIps.id, blockedIpId));
+
+  res.json({ success: true });
+});
+
+export default router;

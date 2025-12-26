@@ -1,4 +1,9 @@
-import { Hono } from "hono";
+import { Router, type Request, type Response } from "express";
+import { db } from "../db/index.js";
+import { agents } from "../db/schema/agents.js";
+import { eq } from "drizzle-orm";
+
+// service functions (anggap sudah ada)
 import {
   createAgent,
   listAgents,
@@ -6,36 +11,34 @@ import {
   updateAgent,
   deleteAgent,
 } from "../services/agentService.js";
-import type { AppEnv } from "src/types/index.js";
-import { db } from "src/db/index.js";
-import { eq } from "drizzle-orm";
-import { agents } from "src/db/schema/agents.js";
 
-export const agentsRoute = new Hono<AppEnv>();
+const router = Router();
 
-// CREATE
-agentsRoute.post("/agents", async (c) => {
-  const { name } = await c.req.json();
+/* =========================
+ * CREATE AGENT
+ * ========================= */
+router.post("/", async (req: Request, res: Response) => {
+  const { name } = req.body;
 
   if (!name) {
-    return c.json({ message: "Agent name is required" }, 400);
+    return res.status(400).json({ message: "Agent name is required" });
   }
 
   const result = await createAgent(name);
-  return c.json(result, 201);
+  return res.status(201).json(result);
 });
 
-agentsRoute.get("agents/install.sh", (c) => {
-  const baseUrl = process.env.APP_BASE_URL ?? '';
-  
+/* =========================
+ * INSTALL SCRIPT
+ * ========================= */
+router.get("/install.sh", (req: Request, res: Response) => {
+  const baseUrl = process.env.APP_BASE_URL ?? "";
+
   const script = `#!/usr/bin/env bash
 set -e
 
 echo "🚀 Installing SuriDash Agent..."
 
-# ======================
-# PARSE ARGUMENTS
-# ======================
 for arg in "$@"; do
   case $arg in
     --agent-id=*)
@@ -56,38 +59,22 @@ INSTALL_DIR="/opt/suridash-agent"
 BIN_PATH="$INSTALL_DIR/agent"
 CONFIG_PATH="/etc/suridash-agent/config.env"
 
-echo "📁 Creating directories..."
 mkdir -p $INSTALL_DIR
 mkdir -p /etc/suridash-agent
 
-# ======================
-# DEPENDENCIES
-# ======================
 if ! command -v curl >/dev/null; then
   apt update && apt install -y curl
 fi
 
-# ======================
-# DOWNLOAD AGENT
-# ======================
 echo "⬇️ Downloading agent binary..."
-curl -fsSL https://suridash.local/agent/agent-linux-amd64 -o $BIN_PATH
+curl -fsSL https://github.com/your-org/suridash-agent/releases/latest/download/suridash-agent-linux-amd64 -o $BIN_PATH
 chmod +x $BIN_PATH
 
-# ======================
-# CONFIG
-# ======================
-echo "⚙️ Writing config..."
 cat <<EOF > $CONFIG_PATH
 AGENT_ID=$AGENT_ID
 API_KEY=$API_KEY
 SERVER_URL=${baseUrl}
 EOF
-
-# ======================
-# SYSTEMD
-# ======================
-echo "🔧 Installing systemd service..."
 
 cat <<EOF > /etc/systemd/system/suridash-agent.service
 [Unit]
@@ -111,35 +98,31 @@ systemctl restart suridash-agent
 echo "✅ SuriDash Agent installed successfully!"
 `;
 
-  return c.text(script, 200, {
-    "Content-Type": "text/x-shellscript",
-  });
+  res.setHeader("Content-Type", "text/x-shellscript");
+  return res.status(200).send(script);
 });
 
-agentsRoute.post("/agents/heartbeat", async (c) => {
-  // 🔐 API KEY dari header
-  const auth = c.req.header("authorization");
-  if (!auth?.startsWith("Bearer ")) {
-    return c.json({ error: "Unauthorized" }, 401);
+/* =========================
+ * HEARTBEAT
+ * ========================= */
+router.post("/heartbeat", async (req: Request, res: Response) => {
+  const auth = req.headers.authorization;
+  const { agent_id } = req.body;
+
+  if (!auth?.startsWith("Bearer ") || !agent_id) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   const apiKey = auth.replace("Bearer ", "");
 
-  const body = await c.req.json<{ agent_id: string }>();
-  if (!body?.agent_id) {
-    return c.json({ error: "agent_id required" }, 400);
-  }
-
-  // 🔍 cari agent
   const agent = await db.query.agents.findFirst({
-    where: eq(agents.id, body.agent_id),
+    where: eq(agents.id, agent_id),
   });
 
   if (!agent || agent.apiKeyHash !== apiKey || !agent.isActive) {
-    return c.json({ error: "Invalid agent" }, 403);
+    return res.status(403).json({ error: "Invalid agent" });
   }
 
-  // ✅ update heartbeat
   await db
     .update(agents)
     .set({
@@ -148,40 +131,49 @@ agentsRoute.post("/agents/heartbeat", async (c) => {
     })
     .where(eq(agents.id, agent.id));
 
-  return c.json({ success: true });
+  return res.json({ success: true });
 });
 
-
-// READ ALL
-agentsRoute.get("/agents", async (c) => {
+/* =========================
+ * READ ALL
+ * ========================= */
+router.get("/", async (_req: Request, res: Response) => {
   const data = await listAgents();
-  return c.json(data);
+  return res.json(data);
 });
 
-// READ ONE
-agentsRoute.get("/agents/:id", async (c) => {
-  const agent = await getAgent(c.req.param("id"));
+/* =========================
+ * READ ONE
+ * ========================= */
+router.get("/:id", async (req: Request, res: Response) => {
+  const agent = await getAgent(req.params.id);
 
   if (!agent) {
-    return c.json({ message: "Agent not found" }, 404);
+    return res.status(404).json({ message: "Agent not found" });
   }
 
-  return c.json(agent);
+  return res.json(agent);
 });
 
-// UPDATE
-agentsRoute.put("/agents/:id", async (c) => {
-  const updated = await updateAgent(c.req.param("id"), await c.req.json());
+/* =========================
+ * UPDATE
+ * ========================= */
+router.put("/:id", async (req: Request, res: Response) => {
+  const updated = await updateAgent(req.params.id, req.body);
 
   if (!updated) {
-    return c.json({ message: "Agent not found" }, 404);
+    return res.status(404).json({ message: "Agent not found" });
   }
 
-  return c.json(updated);
+  return res.json(updated);
 });
 
-// DELETE (SOFT)
-agentsRoute.delete("/agents/:id", async (c) => {
-  await deleteAgent(c.req.param("id"));
-  return c.body(null, 204);
+/* =========================
+ * DELETE (SOFT)
+ * ========================= */
+router.delete("/:id", async (req: Request, res: Response) => {
+  await deleteAgent(req.params.id);
+  return res.status(204).send();
 });
+
+export default router;

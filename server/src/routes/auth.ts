@@ -1,30 +1,35 @@
-import { Hono } from 'hono'
-import { auth } from '../lib/auth.js'
-import { cors } from 'hono/cors';
-import type { AppEnv } from '../types/index.js';
+import { Router, type Request, type Response } from "express";
+import cors from "cors";
+import { auth } from "../lib/auth.js";
+import { toNodeHandler } from "better-auth/node";
 
-const router = new Hono<AppEnv>({
-  strict: false,
-})
+const router = Router();
 
+/* =========================
+ * CORS FOR AUTH ROUTES
+ * ========================= */
 router.use(
-	"/auth/*", // or replace with "*" to enable cors for all routes
-	cors({
-		origin: process.env.ORIGIN_URL!, // replace with your origin
-		allowHeaders: ["Content-Type", "Authorization"],
-		allowMethods: ["POST", "GET", "OPTIONS"],
-		exposeHeaders: ["Content-Length"],
-		maxAge: 600,
-		credentials: true,
-	}),
+  "/auth",
+  cors({
+    origin: process.env.ORIGIN_URL, // frontend origin
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "OPTIONS"],
+    exposedHeaders: ["Content-Length"],
+    maxAge: 600,
+  })
 );
 
-router.on(['POST', 'GET'], '/auth/*', (c) => {
-  return auth.handler(c.req.raw)
-})
+/* =========================
+ * BETTER-AUTH HANDLER
+ * ========================= */
+router.all("/auth/*splat", toNodeHandler(auth));
 
-router.on('GET', '/test', async (c) => {
-	return c.json({ message: 'Hello world!' })
-})
+/* =========================
+ * TEST ROUTE
+ * ========================= */
+router.get("/test", (_req: Request, res: Response) => {
+  res.json({ message: "Hello world!" });
+});
 
-export default router
+export default router;

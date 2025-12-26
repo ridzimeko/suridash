@@ -1,30 +1,45 @@
-import { Hono } from "hono";
+import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
 import { alerts } from "../db/schema/dashboard-schema.js";
 import { asc, desc, and, eq, sql } from "drizzle-orm";
-import type { AppEnv } from "../types/index.js";
 import { authMiddleware } from "../middlewares/auth-middleware.js";
 
-export const alertsRoute = new Hono<AppEnv>();
+const router = Router();
 
-alertsRoute.use("/alerts/*", authMiddleware);
+/* =========================
+ * AUTH MIDDLEWARE
+ * PATH: /api/alerts/*
+ * ========================= */
+router.use("/", authMiddleware);
 
-// PATH AUTOMATIS JADI: /api/alerts
-alertsRoute.get("/alerts", async (c) => {
-  const user = c.get("user");
-  if (!user) return c.json({ error: "Unauthorized" }, 401);
+/* =========================
+ * GET ALL ALERTS
+ * GET /api/alerts
+ * ========================= */
+router.get("/", async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-  const page = Number(c.req.query("page") ?? 1);
-  const limit = Number(c.req.query("limit") ?? 20);
+  const page = Number(req.query.page ?? 1);
+  const limit = Number(req.query.limit ?? 20);
   const offset = (page - 1) * limit;
 
-  const severity = c.req.query("severity");
-  const srcIp = c.req.query("src_ip");
-  const sort = c.req.query("sort") === "asc" ? "asc" : "desc";
+  const severity = req.query.severity
+    ? Number(req.query.severity)
+    : undefined;
 
-  const where = [];
-  if (severity) where.push(eq(alerts.severity, Number(severity)));
-  if (srcIp) where.push(eq(alerts.srcIp, srcIp));
+  const srcIp = req.query.src_ip as string | undefined;
+  const sort = req.query.sort === "asc" ? "asc" : "desc";
+
+  const where: any[] = [];
+  if (severity !== undefined) {
+    where.push(eq(alerts.severity, severity));
+  }
+  if (srcIp) {
+    where.push(eq(alerts.srcIp, srcIp));
+  }
 
   const total = await db
     .select({ count: sql<number>`count(*)` })
@@ -35,11 +50,15 @@ alertsRoute.get("/alerts", async (c) => {
     .select()
     .from(alerts)
     .where(where.length ? and(...where) : undefined)
-    .orderBy(sort === "asc" ? asc(alerts.createdAt) : desc(alerts.createdAt))
+    .orderBy(
+      sort === "asc"
+        ? asc(alerts.createdAt)
+        : desc(alerts.createdAt)
+    )
     .limit(limit)
     .offset(offset);
 
-  return c.json({
+  return res.json({
     page,
     limit,
     total: Number(total[0].count),
@@ -47,14 +66,32 @@ alertsRoute.get("/alerts", async (c) => {
   });
 });
 
-// PATH AUTOMATIS JADI: /api/alerts/:id
-alertsRoute.get("/alerts/:id", async (c) => {
-  const user = c.get("user");
-  if (!user) return c.json({ error: "Unauthorized" }, 401);
+/* =========================
+ * GET ALERT BY ID
+ * GET /api/alerts/:id
+ * ========================= */
+router.get("/:id", async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  if (!user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
-  const id = Number(c.req.param("id"));
-  const row = await db.select().from(alerts).where(eq(alerts.id, id)).limit(1);
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
 
-  if (!row.length) return c.json({ error: "Not found" }, 404);
-  return c.json(row[0]);
+  const row = await db
+    .select()
+    .from(alerts)
+    .where(eq(alerts.id, id))
+    .limit(1);
+
+  if (!row.length) {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  return res.json(row[0]);
 });
+
+export default router;

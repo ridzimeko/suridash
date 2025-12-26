@@ -1,34 +1,59 @@
-import { Hono } from "hono";
-import type { AppEnv } from "../types/index.js";
-import { authMiddleware } from "../middlewares/auth-middleware.js";
+import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
 import { integrations } from "../db/schema/dashboard-schema.js";
 import { eq, desc } from "drizzle-orm";
+import { authMiddleware } from "../middlewares/auth-middleware.js";
 import { sendEmailBrevo } from "../services/emailService.js";
 import { sendTelegram } from "../services/telegramService.js";
 
-export const integrationsRoute = new Hono<AppEnv>();
+const router = Router();
 
-// protect semua endpoint
-integrationsRoute.use("/integrations/*", authMiddleware);
+/* =========================
+ * AUTH MIDDLEWARE
+ * Semua route /integrations
+ * ========================= */
+router.use("/integrations", authMiddleware);
 
-// GET list integrasi
-integrationsRoute.get("/integrations", async (c) => {
-  const result = await db.select().from(integrations).orderBy(desc(integrations.id));
-  return c.json(result);
+/* -------------------------------------------------
+   GET /api/integrations
+--------------------------------------------------- */
+router.get("/integrations", async (_req: Request, res: Response) => {
+  const result = await db
+    .select()
+    .from(integrations)
+    .orderBy(desc(integrations.id));
+
+  return res.json(result);
 });
 
-// GET detail
-integrationsRoute.get("/integrations/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  const data = await db.select().from(integrations).where(eq(integrations.id, id));
-  return c.json(data[0] ?? null);
+/* -------------------------------------------------
+   GET /api/integrations/:id
+--------------------------------------------------- */
+router.get("/integrations/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+
+  const data = await db
+    .select()
+    .from(integrations)
+    .where(eq(integrations.id, id));
+
+  return res.json(data[0] ?? null);
 });
 
-// CREATE
-integrationsRoute.post("/integrations", async (c) => {
-  const body = await c.req.json();
-  const inserted = await db
+/* -------------------------------------------------
+   POST /api/integrations
+--------------------------------------------------- */
+router.post("/integrations", async (req: Request, res: Response) => {
+  const body = req.body;
+
+  if (!body?.provider || !body?.config) {
+    return res.status(400).json({ error: "provider and config are required" });
+  }
+
+  const [inserted] = await db
     .insert(integrations)
     .values({
       provider: body.provider,
@@ -36,13 +61,20 @@ integrationsRoute.post("/integrations", async (c) => {
       enabled: body.enabled ?? true,
     })
     .returning();
-  return c.json({ success: true, data: inserted[0] });
+
+  return res.status(201).json({ success: true, data: inserted });
 });
 
-// UPDATE
-integrationsRoute.put("/integrations/:id", async (c) => {
-  const id = Number(c.req.param("id"));
-  const body = await c.req.json();
+/* -------------------------------------------------
+   PUT /api/integrations/:id
+--------------------------------------------------- */
+router.put("/integrations/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+
+  const body = req.body;
 
   const updated = await db
     .update(integrations)
@@ -50,39 +82,66 @@ integrationsRoute.put("/integrations/:id", async (c) => {
       provider: body.provider,
       config: body.config,
       enabled: body.enabled,
+      updatedAt: new Date(),
     })
     .where(eq(integrations.id, id))
     .returning();
 
-  return c.json({ success: true, data: updated[0] });
+  if (!updated.length) {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  return res.json({ success: true, data: updated[0] });
 });
 
-// DELETE
-integrationsRoute.delete("/integrations/:id", async (c) => {
-  const id = Number(c.req.param("id"));
+/* -------------------------------------------------
+   DELETE /api/integrations/:id
+--------------------------------------------------- */
+router.delete("/integrations/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+
   await db.delete(integrations).where(eq(integrations.id, id));
-  return c.json({ success: true });
+  return res.json({ success: true });
 });
 
-integrationsRoute.post("/integrations/test", async (c) => {
-  const { provider, config } = await c.req.json();
+/* -------------------------------------------------
+   POST /api/integrations/test
+--------------------------------------------------- */
+router.post("/integrations/test", async (req: Request, res: Response) => {
+  const { provider, config } = req.body;
+
+  if (!provider || !config) {
+    return res.status(400).json({ error: "provider and config required" });
+  }
 
   if (provider === "brevo") {
-    await sendEmailBrevo({
-      to: config.emailTo, 
-      subject: "Test Email from SuriDash", 
-      html: "<b>It's work! This is a test email sent from SuriDash.</b>"
-    }, true);
-    return c.json({ message: "Test email sent!" });
+    await sendEmailBrevo(
+      {
+        to: config.emailTo,
+        subject: "Test Email from SuriDash",
+        html: "<b>It's work! This is a test email sent from SuriDash.</b>",
+      },
+      true
+    );
+
+    return res.json({ message: "Test email sent!" });
   }
 
   if (provider === "telegram") {
-    await sendTelegram({
-      message: "Test message from SuriDash via Telegram!",
-    }, true);
-    return c.json({ message: "Test Telegram sent!" });
+    await sendTelegram(
+      {
+        message: "Test message from SuriDash via Telegram!",
+      },
+      true
+    );
+
+    return res.json({ message: "Test Telegram sent!" });
   }
 
-  return c.json({ error: "Unknown provider" }, 400);
+  return res.status(400).json({ error: "Unknown provider" });
 });
 
+export default router;

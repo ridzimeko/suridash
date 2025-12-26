@@ -1,24 +1,35 @@
-import type { MiddlewareHandler } from "hono";
+import type { Request, Response, NextFunction } from "express";
 import { auth } from "../lib/auth.js";
 
-export const authMiddleware: MiddlewareHandler = async (c, next) => {
-    // Ambil session dari Better Auth
+export async function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    // 🔐 Ambil session dari Better Auth (cookie-based)
     const session = await auth.api.getSession({
-        headers: c.req.raw.headers,
+      headers: req.headers as HeadersInit,
     });
 
-    // Jika tidak ada session → unauthorized
+    // ❌ Tidak ada session
     if (!session) {
-        return c.json(
-            { error: "Unauthorized", message: "Please login first." },
-            401
-        );
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Please login first.",
+      });
     }
 
-    // Simpan user & session ke context
-    c.set("user", session.user);
-    c.set("session", session.session);
+    // ✅ Inject ke request (pengganti c.set)
+    (req as any).user = session.user;
+    (req as any).session = session.session;
 
-    // Lanjut ke handler berikutnya
-    await next();
-};
+    return next();
+  } catch (err) {
+    console.error("Auth middleware error:", err);
+    return res.status(401).json({
+      error: "Unauthorized",
+      message: "Invalid or expired session.",
+    });
+  }
+}

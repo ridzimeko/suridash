@@ -1,90 +1,33 @@
-import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
-import auth from "./routes/auth.js";
-import { alertsRoute } from './routes/alerts.js';
-import type { AppEnv } from './types/index.js';
-import { cors } from 'hono/cors';
-import { analyticsRoute } from './routes/analytics.js';
-import { integrationsRoute } from './routes/integrations.js';
-import { systemRoute } from './routes/system.js';
-import { createNodeWebSocket } from '@hono/node-ws';
-import { startAlertTailer } from "./lib/alertTailer.js";
-import { startIpsetScheduler } from './lib/ipsetScheduler.js';
-import { blockedRoute } from './routes/blocked-ips.js';
-import { agentsRoute } from './routes/agents.js';
-import { heartbeatRoute } from './routes/agent-heartbeat.js';
-import { agentWs } from './routes/ws/agent.js';
+import http from "http";
+import { WebSocketServer } from "ws";
+import app from "./app.js";
 
-const app = new Hono<AppEnv>({
-  strict: false,
+import agentsRoute from "./routes/agents.js";
+import blockedIpsRoute from "./routes/blocked-ips.js";
+import executeRoute from "./routes/execute.js";
+import authRoute from "./routes/auth.js";
+import alertsRoute from "./routes/alerts.js";
+import integrationRoute from "./routes/integrations.js";
+import { initAgentWs } from "./ws/agent.js";
+
+/* =====================
+ * REST ROUTES
+ * ===================== */
+app.use("/api/agents", agentsRoute);
+app.use("/api/blocked-ips", blockedIpsRoute);
+app.use("/api/execute", executeRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/alerts", alertsRoute);
+app.use("/api/integration", integrationRoute);
+
+/* =====================
+ * HTTP + WS SERVER
+ * ===================== */
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
+initAgentWs(wss);
+
+server.listen(3000, () => {
+  console.log("🚀 Express + WS running on http://localhost:3000");
 });
-
-// app.get('/', (c) => {
-//   return c.text('Hello Hono!')
-// })
-
-const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute, blockedRoute, agentsRoute, heartbeatRoute] as const;
-
-app.use(
-  "/api/*",
-  cors({
-    origin: process.env.ORIGIN_URL!, // replace with your origin
-    credentials: true,
-  })
-);
-
-routes.forEach((route) => {
-  app.route("/api", route);
-});
-
-const agentSockets = new Map();
-const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app })
-
-// WebSocket endpoint
-app.get(
-  "/ws/agent",
-  upgradeWebSocket((c) => {
-    const agentId = c.req.header("x-agent-id");
-
-    if (!agentId) {
-      throw new Error("Missing agent id");
-    }
-
-    console.log(agentId)
-
-    return {
-      onOpen(_, ws) {
-        agentSockets.set(agentId, ws);
-        console.log(`Agent connected: ${agentId}`);
-      },
-
-      onClose() {
-        agentSockets.delete(agentId);
-        console.log(`Agent disconnected: ${agentId}`);
-      },
-    };
-  })
-);
-
-export function sendCommandToAgent(
-  agentId: string,
-  payload: any
-) {
-  const ws = agentSockets.get(agentId);
-  if (!ws) return false;
-
-  ws.send(JSON.stringify(payload));
-  return true;
-}
-
-
-const server = serve({
-  fetch: app.fetch,
-  port: 3000
-}, (info) => {
-  console.log(`Server is running on http://localhost:${info.port}`)
-})
-
-injectWebSocket(server);
-startAlertTailer();
-startIpsetScheduler();
