@@ -7,17 +7,23 @@ import {
   timestamp,
   jsonb,
   index,
+  pgEnum,
+  text,
 } from "drizzle-orm/pg-core";
+
+export const blockExecutionStatusEnum = pgEnum("block_execution_status", [
+  "pending",
+  "executed",
+  "failed",
+]);
 
 // 🔹 Riwayat alert penting (bukan semua alert realtime harus disimpan)
 export const alerts = pgTable(
   "alerts",
   {
     id: serial("id").primaryKey(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-
+    agentId: varchar("agent_id", { length: 32 }), // agt_xxx
+    
     // Info IP & koneksi
     srcIp: varchar("src_ip", { length: 45 }).notNull(),
     srcPort: integer("src_port"),
@@ -43,6 +49,10 @@ export const alerts = pgTable(
     // Flag apakah IP ini sempat diblok
     wasBlocked: boolean("was_blocked").default(false).notNull(),
 
+    createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+
     // Raw JSON dari Suricata event (opsional tapi berguna)
     raw: jsonb("raw"),
   },
@@ -50,7 +60,7 @@ export const alerts = pgTable(
     idxCreatedAt: index("idx_alerts_created_at").on(table.createdAt),
     idxSrcIp: index("idx_alerts_src_ip").on(table.srcIp),
     idxSeverity: index("idx_alerts_severity").on(table.severity),
-  }),
+  })
 );
 
 // 🔹 Riwayat IP yang diblokir firewall
@@ -62,27 +72,39 @@ export const blockedIps = pgTable(
 
     reason: varchar("reason", { length: 512 }), // misal: "SSH brute force", "port scan"
     attackType: varchar("attack_type", { length: 128 }), // kategori yang kamu pakai di UI
-
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
     blockedUntil: timestamp("blocked_until", { withTimezone: true }),
     isActive: boolean("is_active").default(true).notNull(),
 
-    // Sumber rule block (firewalld / iptables)
-    // source: varchar("source", { length: 32 }).default("firewalld"),
     alertCount: integer("alert_count").default(0).notNull(),
+
+    /* =====================
+     * EXECUTION TRACKING
+     * ===================== */
+    executionStatus: blockExecutionStatusEnum("execution_status")
+      .default("pending")
+      .notNull(),
+    executedAt: timestamp("executed_at", {
+      withTimezone: true,
+    }),
+    executionError: text("execution_error"),
+    agentId: varchar("agent_id", { length: 32 }), // agt_xxx
 
     country: varchar("country", { length: 2 }),
     city: varchar("city", { length: 128 }),
 
     // Jika kamu ingin tahu apakah auto-block atau manual admin
     autoBlocked: boolean("auto_blocked").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => ({
     idxBlockedIp: index("idx_blocked_ips_ip").on(table.ip),
     idxBlockedActive: index("idx_blocked_ips_active").on(table.isActive),
-  }),
+  })
 );
 
 // 🔹 Rules custom yang di-edit dari dashboard
@@ -90,6 +112,7 @@ export const suricataRules = pgTable("suricata_rules", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: varchar("description", { length: 1024 }),
+  agentId: varchar("agent_id", { length: 32 }), // agt_xxx
 
   // isi rule Suricata lengkap
   ruleText: varchar("rule_text", { length: 4096 }).notNull(),

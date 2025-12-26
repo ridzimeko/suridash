@@ -85,6 +85,7 @@ blockedRoute.post("/blocked-ips", async (c) => {
       blockedUntil: body.blockedUntil ? new Date(body.blockedUntil) : null,
       isActive: true,
       autoBlocked: false,
+      executionStatus: "pending",
       alertCount: 0,
       city: body.city ?? null,
       country: body.country ?? null,

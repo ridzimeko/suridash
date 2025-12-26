@@ -15,6 +15,13 @@
       "when": 1766727773936,
       "tag": "0001_hesitant_orphan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1766738931749,
+      "tag": "0002_clumsy_diamondback",
+      "breakpoints": true
     }
   ]
 }
