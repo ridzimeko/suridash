@@ -12,6 +12,8 @@ import { startAlertTailer } from "./lib/alertTailer.js";
 import { startIpsetScheduler } from './lib/ipsetScheduler.js';
 import { blockedRoute } from './routes/blocked-ips.js';
 import { agentsRoute } from './routes/agents.js';
+import { heartbeatRoute } from './routes/agent-heartbeat.js';
+import { agentWs } from './routes/ws/agent.js';
 
 const app = new Hono<AppEnv>({
   strict: false,
@@ -21,7 +23,7 @@ const app = new Hono<AppEnv>({
 //   return c.text('Hello Hono!')
 // })
 
-const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute, blockedRoute, agentsRoute] as const;
+const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute, blockedRoute, agentsRoute, heartbeatRoute] as const;
 
 app.use(
   "/api/*",
@@ -35,25 +37,45 @@ routes.forEach((route) => {
   app.route("/api", route);
 });
 
-// Initialize WebSocket
-const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app: app });
+const agentSockets = new Map();
+const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app })
 
 // WebSocket endpoint
 app.get(
-  "/ws/alerts/realtime",
+  "/ws/agent",
   upgradeWebSocket((c) => {
+    const agentId = c.req.header("x-agent-id");
+
+    if (!agentId) {
+      throw new Error("Missing agent id");
+    }
+
+    console.log(agentId)
+
     return {
-      onOpen(evt, ws) {
-        console.log("Client connected to Suricata alerts");
-        // TODO: add to clients websocket
+      onOpen(_, ws) {
+        agentSockets.set(agentId, ws);
+        console.log(`Agent connected: ${agentId}`);
       },
 
       onClose() {
-        console.log("Client disconnected");
+        agentSockets.delete(agentId);
+        console.log(`Agent disconnected: ${agentId}`);
       },
     };
   })
 );
+
+export function sendCommandToAgent(
+  agentId: string,
+  payload: any
+) {
+  const ws = agentSockets.get(agentId);
+  if (!ws) return false;
+
+  ws.send(JSON.stringify(payload));
+  return true;
+}
 
 
 const server = serve({

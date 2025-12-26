@@ -7,6 +7,9 @@ import {
   deleteAgent,
 } from "../services/agentService.js";
 import type { AppEnv } from "src/types/index.js";
+import { db } from "src/db/index.js";
+import { eq } from "drizzle-orm";
+import { agents } from "src/db/schema/agents.js";
 
 export const agentsRoute = new Hono<AppEnv>();
 
@@ -111,6 +114,41 @@ echo "✅ SuriDash Agent installed successfully!"
   return c.text(script, 200, {
     "Content-Type": "text/x-shellscript",
   });
+});
+
+agentsRoute.post("/agents/heartbeat", async (c) => {
+  // 🔐 API KEY dari header
+  const auth = c.req.header("authorization");
+  if (!auth?.startsWith("Bearer ")) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const apiKey = auth.replace("Bearer ", "");
+
+  const body = await c.req.json<{ agent_id: string }>();
+  if (!body?.agent_id) {
+    return c.json({ error: "agent_id required" }, 400);
+  }
+
+  // 🔍 cari agent
+  const agent = await db.query.agents.findFirst({
+    where: eq(agents.id, body.agent_id),
+  });
+
+  if (!agent || agent.apiKeyHash !== apiKey || !agent.isActive) {
+    return c.json({ error: "Invalid agent" }, 403);
+  }
+
+  // ✅ update heartbeat
+  await db
+    .update(agents)
+    .set({
+      status: "online",
+      lastSeenAt: new Date(),
+    })
+    .where(eq(agents.id, agent.id));
+
+  return c.json({ success: true });
 });
 
 

@@ -9,7 +9,7 @@ const agentSockets = new Map();
 
 export const agentWs = new Hono();
 
-const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app: agentWs });
+const { upgradeWebSocket } = createNodeWebSocket({ app: agentWs });
 
 agentWs.get(
   "/ws/agent",
@@ -19,6 +19,8 @@ agentWs.get(
     if (!agentId) {
       throw new Error("Missing agent id");
     }
+
+    console.log(agentId)
 
     return {
       onOpen(_, ws) {

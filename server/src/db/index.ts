@@ -6,6 +6,7 @@ import 'dotenv/config';
 
 import * as authSchema from "./schema/auth-schema.js";
 import * as dashboardSchema from "./schema/dashboard-schema.js";
+import * as agentSchema from "./schema/agents.js";
 
 // const db = drizzle(process.env.DATABASE_URL as string,
 //     {
@@ -19,7 +20,8 @@ import * as dashboardSchema from "./schema/dashboard-schema.js";
 const client = postgres(process.env.DATABASE_URL!);
 const db = drizzle({ client, schema: {
     ...authSchema,
-    ...dashboardSchema
+    ...dashboardSchema,
+    ...agentSchema
 } });
 
 export { db };
