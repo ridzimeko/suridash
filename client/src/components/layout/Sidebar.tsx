@@ -1,77 +1,106 @@
-import { Link, useLocation } from 'react-router';
-import { cn } from '@/lib/utils';
+import { Link, useLocation } from "react-router";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from "@/components/ui/sidebar";
 import {
   LayoutDashboard,
   Bell,
-  Map,
   BarChart3,
-  FileCode,
   Shield,
-  FileText,
-  Settings,
   Plug,
   Activity,
   HardDrive,
-} from 'lucide-react';
+} from "lucide-react";
 
 const menuItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/realtime-alerts', icon: Bell, label: 'Realtime Alerts' },
-  // { path: '/attack-map', icon: Map, label: 'Attack Map' },
-  { path: '/charts-analytics', icon: BarChart3, label: 'Charts & Analytics' },
-  // { path: '/rules-editor', icon: FileCode, label: 'Rules Editor' },
-  { path: '/block-history', icon: Shield, label: 'Block History' },
-  // { path: '/system-logs', icon: FileText, label: 'System Logs' },
-  { path: '/agents', icon: HardDrive, label: 'Manage Agents' },
-  // { path: '/settings', icon: Settings, label: 'Settings' },
-  { path: '/integration', icon: Plug, label: 'Integration' },
+  { path: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { path: "/realtime-alerts", icon: Bell, label: "Realtime Alerts" },
+  { path: "/charts-analytics", icon: BarChart3, label: "Charts & Analytics" },
+  { path: "/block-history", icon: Shield, label: "Block History" },
+  { path: "/agents", icon: HardDrive, label: "Manage Agents" },
+  { path: "/integration", icon: Plug, label: "Integration" },
 ];
 
-export default function Sidebar() {
+export default function AppSidebar() {
   const location = useLocation();
 
   return (
-    <div className="flex h-screen w-64 flex-col border-r bg-card">
-      <div className="flex h-16 items-center gap-2 border-b px-6">
-        <Activity className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-xl font-bold text-primary">SuriDash</h1>
-          <p className="text-xs text-muted-foreground">IDS/IPS Dashboard</p>
-        </div>
-      </div>
+    <Sidebar collapsible="icon">
+      {/* HEADER */}
+      <SidebarHeader className="h-16 border-b">
+        <div className="flex items-center gap-2 px-2">
+          <Activity className="h-7 w-7 text-primary shrink-0" />
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.path;
-
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                isActive
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="border-t p-4">
-        <div className="rounded-lg bg-muted p-3">
-          <p className="text-xs font-medium">System Status</p>
-          <div className="mt-2 flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-            <span className="text-xs text-muted-foreground">All systems operational</span>
+          {/* TEXT: auto hide saat collapsed */}
+          <div
+            className="flex flex-col leading-tight overflow-hidden 
+      group-data-[collapsible=icon]:hidden"
+          >
+            <span className="font-bold text-primary whitespace-nowrap">
+              SuriDash
+            </span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              IDS/IPS Dashboard
+            </span>
           </div>
         </div>
-      </div>
-    </div>
+      </SidebarHeader>
+
+      {/* CONTENT */}
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link to={item.path}>
+                        <Icon className="h-5 w-5" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      {/* FOOTER */}
+      <SidebarFooter className="border-t">
+        <div className="px-2 py-3">
+          <div className="flex items-center gap-2 rounded-lg bg-muted p-3">
+            {/* STATUS DOT */}
+            <span className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+
+            {/* TEXT – auto hide saat collapsed */}
+            <div
+              className="flex flex-col overflow-hidden 
+        group-data-[collapsible=icon]:hidden"
+            >
+              <span className="text-xs font-medium whitespace-nowrap">
+                System Status
+              </span>
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                All systems operational
+              </span>
+            </div>
+          </div>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
