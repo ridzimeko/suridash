@@ -12,13 +12,11 @@ import { useAgentStore } from "@/store/agent-store";
 import AgentSelector from "../dashboard/header/AgentSelector";
 
 function InitAgents() {
-  const setAgents = useAgentStore((s) => s.setAgents);
+  const loadAgents = useAgentStore(s => s.loadAgents);
 
   useEffect(() => {
-    fetch("/api/agents")
-      .then((res) => res.json())
-      .then((data) => setAgents(data));
-  }, [setAgents]);
+    loadAgents();
+  }, [loadAgents]);
 
   return null;
 }

@@ -11,6 +11,7 @@ import { createNodeWebSocket } from '@hono/node-ws';
 import { startAlertTailer } from "./lib/alertTailer.js";
 import { startIpsetScheduler } from './lib/ipsetScheduler.js';
 import { blockedRoute } from './routes/blocked-ips.js';
+import { agentsRoute } from './routes/agents.js';
 
 const app = new Hono<AppEnv>({
   strict: false,
@@ -20,7 +21,7 @@ const app = new Hono<AppEnv>({
 //   return c.text('Hello Hono!')
 // })
 
-const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute, blockedRoute] as const;
+const routes = [auth, alertsRoute, analyticsRoute, integrationsRoute, systemRoute, blockedRoute, agentsRoute] as const;
 
 app.use(
   "/api/*",
