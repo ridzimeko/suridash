@@ -2,41 +2,38 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Square, RotateCw } from 'lucide-react';
-import { type ServiceStatus as ServiceStatusType } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface ServiceStatusProps {
-  status: ServiceStatusType;
+  isInstalled: boolean;
+  status: boolean;
   onStart: () => void;
   onStop: () => void;
   onRestart: () => void;
 }
 
 export default function ServiceStatus({
+  isInstalled,
   status,
   onStart,
   onStop,
   onRestart,
 }: ServiceStatusProps) {
-  const getStatusColor = (status: ServiceStatusType) => {
+  const getStatusColor = (status: boolean) => {
     switch (status) {
-      case 'running':
+      case true:
         return 'bg-green-500';
-      case 'stopped':
-        return 'bg-gray-500';
-      case 'error':
+      case false:
         return 'bg-red-500';
     }
   };
 
-  const getStatusBadge = (status: ServiceStatusType) => {
+  const getStatusBadge = (status: boolean) => {
     switch (status) {
-      case 'running':
+      case true:
         return <Badge className="bg-green-500">Running</Badge>;
-      case 'stopped':
+      case false:
         return <Badge variant="secondary">Stopped</Badge>;
-      case 'error':
-        return <Badge variant="destructive">Error</Badge>;
     }
   };
 
@@ -44,6 +41,9 @@ export default function ServiceStatus({
     <Card>
       <CardHeader>
         <CardTitle>Suricata Service</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          {isInstalled ? 'Manage the Suricata IDS/IPS service' : 'Suricata is not installed'}
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
@@ -59,7 +59,7 @@ export default function ServiceStatus({
             size="sm"
             variant="outline"
             onClick={onStart}
-            disabled={status === 'running'}
+            disabled={status === true}
             className="flex-1"
           >
             <Play className="mr-2 h-4 w-4" />
@@ -69,7 +69,7 @@ export default function ServiceStatus({
             size="sm"
             variant="outline"
             onClick={onStop}
-            disabled={status === 'stopped'}
+            disabled={status === false}
             className="flex-1"
           >
             <Square className="mr-2 h-4 w-4" />
@@ -79,7 +79,7 @@ export default function ServiceStatus({
             size="sm"
             variant="outline"
             onClick={onRestart}
-            disabled={status === 'stopped'}
+            disabled={status === false}
             className="flex-1"
           >
             <RotateCw className="mr-2 h-4 w-4" />

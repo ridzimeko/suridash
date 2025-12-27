@@ -24,6 +24,15 @@ export function handleAgentWS(ws: WebSocket, req: any) {
         });
       }
 
+      if (msg.type === "agent_status") {
+        broadcastToDashboard({
+          agentId,
+          type: "agent_status",
+          payload: msg.payload,
+          timestamp: msg.timestamp,
+        });
+      }
+
       if (msg.type === "ack") {
         console.log("ACK from agent:", agentId, msg);
       }

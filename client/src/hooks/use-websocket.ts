@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useMetricsStore } from "@/store/metrics-store";
+import { useAgentStatusStore } from "@/store/agent-status-store";
 
 const RETRY_DELAY = 3000; // 3 detik
 
@@ -30,6 +31,12 @@ export function useWebsocket() {
           console.log("WS message received:", data);
           if (data.type === "system_metrics") {
             addMetric(data);
+          }
+
+          if (data.type === "agent_status") {
+            useAgentStatusStore
+              .getState()
+              .setStatus(data.agentId, data.payload);
           }
         } catch (err) {
           console.error("Invalid WS message", err);

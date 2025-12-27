@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useWebsocket } from '@/hooks/use-websocket';
 import { useMetricsStore } from '@/store/metrics-store';
 import { useAgentStore } from '@/store/agent-store';
+import { useAgentStatusStore } from '@/store/agent-status-store';
 
 export default function Index() {
   useWebsocket();
@@ -15,7 +16,9 @@ export default function Index() {
   // ganti nanti pakai dropdown agent
   const agentId = useAgentStore((s) => s.selectedAgentId);
 
-  console.log("Selected agent:", agentId);
+  const agentStatus = useAgentStatusStore(
+    (s) => agentId ? s.statusByAgent[agentId] : undefined
+  );
 
   const metrics =
     useMetricsStore((s) =>
@@ -68,7 +71,7 @@ export default function Index() {
         />
         <MetricCard
           title="Service Status"
-          value={"Running"}
+          value={agentStatus?.suricata.running ? 'Running' : 'Stopped'}
           icon={Activity}
           className="capitalize"
         />
@@ -86,7 +89,8 @@ export default function Index() {
           freeRam={latestMetric?.payload?.memory.free}
         />
         <ServiceStatus
-          status={"running"}
+          isInstalled={agentStatus?.suricata.installed ?? false}
+          status={agentStatus?.suricata.running ?? false}
           onStart={handleStart}
           onStop={handleStop}
           onRestart={handleRestart}
