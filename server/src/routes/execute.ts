@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { sendCommandToAgent } from "../ws/agent.js";
 import { db } from "../db/index.js";
 import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { eq } from "drizzle-orm";
@@ -17,15 +16,15 @@ router.post("/block", async (req, res) => {
     return res.status(404).json({ error: "Not found" });
   }
 
-  const sent = sendCommandToAgent(agentId, {
-    type: "block_ip",
-    ip: blocked.ip,
-    duration: 3600,
-  });
+  // const sent = sendCommandToAgent(agentId, {
+  //   type: "block_ip",
+  //   ip: blocked.ip,
+  //   duration: 3600,
+  // });
 
-  if (!sent) {
-    return res.status(409).json({ error: "Agent offline" });
-  }
+  // if (!sent) {
+  //   return res.status(409).json({ error: "Agent offline" });
+  // }
 
   await db
     .update(blockedIps)

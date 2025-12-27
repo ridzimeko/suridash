@@ -12,12 +12,12 @@ const router = Router();
  * AUTH MIDDLEWARE
  * Semua route /integrations
  * ========================= */
-router.use("/integrations", authMiddleware);
+router.use(authMiddleware);
 
 /* -------------------------------------------------
    GET /api/integrations
 --------------------------------------------------- */
-router.get("/integrations", async (_req: Request, res: Response) => {
+router.get("/", async (_req: Request, res: Response) => {
   const result = await db
     .select()
     .from(integrations)
@@ -29,7 +29,7 @@ router.get("/integrations", async (_req: Request, res: Response) => {
 /* -------------------------------------------------
    GET /api/integrations/:id
 --------------------------------------------------- */
-router.get("/integrations/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
@@ -46,7 +46,7 @@ router.get("/integrations/:id", async (req: Request, res: Response) => {
 /* -------------------------------------------------
    POST /api/integrations
 --------------------------------------------------- */
-router.post("/integrations", async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   const body = req.body;
 
   if (!body?.provider || !body?.config) {
@@ -68,7 +68,7 @@ router.post("/integrations", async (req: Request, res: Response) => {
 /* -------------------------------------------------
    PUT /api/integrations/:id
 --------------------------------------------------- */
-router.put("/integrations/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
@@ -97,7 +97,7 @@ router.put("/integrations/:id", async (req: Request, res: Response) => {
 /* -------------------------------------------------
    DELETE /api/integrations/:id
 --------------------------------------------------- */
-router.delete("/integrations/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
@@ -110,7 +110,7 @@ router.delete("/integrations/:id", async (req: Request, res: Response) => {
 /* -------------------------------------------------
    POST /api/integrations/test
 --------------------------------------------------- */
-router.post("/integrations/test", async (req: Request, res: Response) => {
+router.post("/test", async (req: Request, res: Response) => {
   const { provider, config } = req.body;
 
   if (!provider || !config) {
