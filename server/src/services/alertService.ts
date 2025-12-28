@@ -1,13 +1,36 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gte } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { alerts, blockedIps } from "../db/schema/dashboard-schema.js";
 import { fetchGeoIP } from "./geoipService.js";
 import { blockIpAndRecord } from "./ipsetService.js";
 import { notifyAll } from "./notificationService.js";
 
-export async function saveAlert(json: any) {
+const DEDUP_WINDOW_MS = 60_000; // 1 menit
+
+async function findSimilarAlert(agentId: string, alert: any) {
+  const since = new Date(Date.now() - DEDUP_WINDOW_MS);
+
+  const rows = await db
+    .select()
+    .from(alerts)
+    .where(
+      and(
+        eq(alerts.agentId, agentId),
+        eq(alerts.signatureId, alert.signatureId),
+        eq(alerts.srcIp, alert.srcIp),
+        eq(alerts.destIp, alert.destIp ?? ""),
+        eq(alerts.protocol, alert.protocol),
+        gte(alerts.createdAt, since)
+      )
+    )
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
+export async function saveAlert(agentId: string, payload: any) {
   // don't block private IPs
-  const IP = json.src_ip;
+  const IP = payload.srcIp;
   const privateIpRanges = [
     /^10\./,
     /^192\.168\./,
@@ -30,35 +53,32 @@ export async function saveAlert(json: any) {
     4: "low",
   }
 
-  const geo = await fetchGeoIP(json.src_ip);
+  const existing = await findSimilarAlert(agentId, payload);
 
-  function getASN(orgString: string) {
-    const match = orgString.match(/(AS\d+)/i);
-    return match ? match[1] : null;
+  if (existing) {
+    console.log("Duplicate alert detected, skipping:", payload.signature);
+    return { existing: true, alert: existing };
   }
 
-  function getASName(orgString: string) {
-    const match = orgString.match(/AS\d+\s+(.*)/i);
-    return match ? match[1] : null;
-  }
+  const geo = await fetchGeoIP(payload.srcIp);
 
   const alert = {
-    signature: json.alert?.signature ?? "Unknown",
-    category: json.alert?.category ?? "Uncategorized",
-    severity: json.alert?.severity,
-    srcIp: json.src_ip,
-    srcPort: json.src_port,
-    destIp: json.dest_ip,
-    destPort: json.dest_port,
-    protocol: json.proto,
-    createdAt: new Date(json.timestamp),
-    signatureId: json.alert?.signature_id ?? null,
+    signature: payload.signature ?? "Unknown",
+    category: payload.category ?? "Uncategorized",
+    severity: payload.severity,
+    srcIp: payload.srcIp,
+    srcPort: payload.srcPort,
+    destIp: payload.destIp,
+    destPort: payload.destPort,
+    protocol: payload.protocol,
+    createdAt: new Date(payload.timestamp),
+    signatureId: payload?.signatureId ?? null,
     country: geo?.country ?? null,
     city: geo?.city ?? null,
     latitude: geo?.latitude ? geo.latitude.toString() : null,
     longitude: geo?.longitude ? geo.longitude.toString() : null,
-    as_number: getASN(geo?.org),
-    as_name: getASName(geo?.org),
+    asNumber: geo?.asn ? geo.asn.toString() : null,
+    asName: geo?.organization_name ?? null,
     wasBlocked: false,
   };
 
@@ -66,17 +86,17 @@ export async function saveAlert(json: any) {
   if (IP && (alert.severity === 1 || alert.severity === 2)) {
     try {
       // block selama 60 menit misalnya
-      await blockIpAndRecord({
-        ip: IP,
-        reason: `Auto block for ${severityMap[alert.severity as keyof typeof severityMap] ?? 'unknown'}`,
-        attackType: json.alert?.category,
-        ttlMinutes: 60,
-        autoBlocked: true,
-        city: alert.city,
-        country: alert.country,
-      });
-      alert.wasBlocked = true;
-      console.log(`Auto-blocked IP: ${IP}`);
+      // await blockIpAndRecord({
+      //   ip: IP,
+      //   reason: `Auto block for ${severityMap[alert.severity as keyof typeof severityMap] ?? 'unknown'}`,
+      //   attackType: json.alert?.category,
+      //   ttlMinutes: 60,
+      //   autoBlocked: true,
+      //   city: alert.city,
+      //   country: alert.country,
+      // });
+      // alert.wasBlocked = true;
+      // console.log(`Auto-blocked IP: ${IP}`);
 
       // Notify admins
       console.log("Sending notifications for alert:", IP);
@@ -91,4 +111,6 @@ export async function saveAlert(json: any) {
   console.log("alert triggered:", alert.srcIp, "severity:", alert.severity, "blocked:", alert.wasBlocked);
 
   await db.insert(alerts).values(alert);
+
+  return { existing: false, alert };
 }

@@ -29,8 +29,6 @@ export const useMetricsStore = create<MetricsState>((set) => ({
         [metric.agentId]: [...list.slice(-29), metric],
       };
 
-      console.log("STORE AFTER:", next);
-
       return { metricsByAgent: next };
     }),
 }));

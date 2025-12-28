@@ -27,9 +27,6 @@ export default function Index() {
 
   const latestMetric = metrics.at(-1);
 
-  console.log("latest", latestMetric)
-
-
   const handleStart = () => {
     toast.success('Suricata service started successfully');
   };
@@ -91,6 +88,7 @@ export default function Index() {
         <ServiceStatus
           isInstalled={agentStatus?.suricata.installed ?? false}
           status={agentStatus?.suricata.running ?? false}
+          version={agentStatus?.suricata.version ?? 'N/A'}
           onStart={handleStart}
           onStop={handleStop}
           onRestart={handleRestart}

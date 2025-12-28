@@ -7,6 +7,7 @@ type AgentStatus = {
     eveLogExists: boolean;
     eveLogPath?: string;
     lastModified?: number;
+    version?: string;
   };
 };
 

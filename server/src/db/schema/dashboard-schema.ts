@@ -29,7 +29,7 @@ export const alerts = pgTable(
     srcPort: integer("src_port"),
     destIp: varchar("dest_ip", { length: 45 }),
     destPort: integer("dest_port"),
-    protocol: varchar("protocol", { length: 10 }),
+    protocol: varchar("protocol", { length: 15 }),
 
     // Info Suricata alert
     signatureId: integer("signature_id"),
@@ -38,7 +38,7 @@ export const alerts = pgTable(
     severity: integer("severity"), // 1 (high) - 3 (low)
 
     // Info GeoIP (kalau kamu simpan)
-    country: varchar("country", { length: 2 }),
+    country: varchar("country"),
     city: varchar("city", { length: 128 }),
     latitude: varchar("latitude", { length: 32 }),
     longitude: varchar("longitude", { length: 32 }),

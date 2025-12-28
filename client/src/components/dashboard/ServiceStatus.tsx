@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 interface ServiceStatusProps {
   isInstalled: boolean;
   status: boolean;
+  version?: string;
   onStart: () => void;
   onStop: () => void;
   onRestart: () => void;
@@ -15,6 +16,7 @@ interface ServiceStatusProps {
 export default function ServiceStatus({
   isInstalled,
   status,
+  version = 'N/A',
   onStart,
   onStop,
   onRestart,
@@ -90,7 +92,7 @@ export default function ServiceStatus({
         <div className="rounded-lg bg-muted p-3 text-xs">
           <p className="font-medium">Service Information</p>
           <div className="mt-2 space-y-1 text-muted-foreground">
-            <p>Version: 7.0.3</p>
+            <p>Version: {version}</p>
             <p>Uptime: 2d 14h 32m</p>
             <p>Interface: eth0</p>
           </div>

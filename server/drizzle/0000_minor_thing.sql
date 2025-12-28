@@ -1,3 +1,18 @@
+CREATE TYPE "public"."agent_status" AS ENUM('online', 'offline');--> statement-breakpoint
+CREATE TYPE "public"."block_execution_status" AS ENUM('pending', 'executed', 'failed');--> statement-breakpoint
+CREATE TABLE "agents" (
+	"id" varchar(32) PRIMARY KEY NOT NULL,
+	"name" varchar(100) NOT NULL,
+	"hostname" varchar(100),
+	"ip_address" varchar(45),
+	"status" "agent_status" DEFAULT 'offline' NOT NULL,
+	"api_key" text NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"last_seen_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
@@ -48,23 +63,24 @@ CREATE TABLE "verification" (
 --> statement-breakpoint
 CREATE TABLE "alerts" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"agent_id" varchar(32),
 	"src_ip" varchar(45) NOT NULL,
 	"src_port" integer,
 	"dest_ip" varchar(45),
 	"dest_port" integer,
-	"protocol" varchar(10),
+	"protocol" varchar(15),
 	"signature_id" integer,
 	"signature" varchar(512),
 	"category" varchar(256),
 	"severity" integer,
-	"country" varchar(2),
+	"country" varchar,
 	"city" varchar(128),
 	"latitude" varchar(32),
 	"longitude" varchar(32),
 	"as_number" varchar(32),
 	"as_name" varchar(256),
 	"was_blocked" boolean DEFAULT false NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"raw" jsonb
 );
 --> statement-breakpoint
@@ -73,13 +89,17 @@ CREATE TABLE "blocked_ips" (
 	"ip" varchar(45) NOT NULL,
 	"reason" varchar(512),
 	"attack_type" varchar(128),
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"blocked_until" timestamp with time zone,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"alert_count" integer DEFAULT 0 NOT NULL,
+	"execution_status" "block_execution_status" DEFAULT 'pending' NOT NULL,
+	"executed_at" timestamp with time zone,
+	"execution_error" text,
+	"agent_id" varchar(32),
 	"country" varchar(2),
 	"city" varchar(128),
-	"auto_blocked" boolean DEFAULT true NOT NULL
+	"auto_blocked" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "integrations" (
@@ -95,6 +115,7 @@ CREATE TABLE "suricata_rules" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"description" varchar(1024),
+	"agent_id" varchar(32),
 	"rule_text" varchar(4096) NOT NULL,
 	"enabled" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
