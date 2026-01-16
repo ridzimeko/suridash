@@ -1,10 +1,8 @@
 import MetricCard from '@/components/dashboard/MetricCard';
 import ResourceMonitor from '@/components/dashboard/ResourceMonitor';
-import ServiceStatus from '@/components/dashboard/ServiceStatus';
 import QuickStats from '@/components/dashboard/QuickStats';
 import { mockAlerts } from '@/lib/mockData';
 import { Bell, Shield, FileCode, Activity } from 'lucide-react';
-import { toast } from 'sonner';
 import { useWebsocket } from '@/hooks/use-websocket';
 import { useMetricsStore } from '@/store/metrics-store';
 import { useAgentStore } from '@/store/agent-store';
@@ -27,17 +25,17 @@ export default function Index() {
 
   const latestMetric = metrics.at(-1);
 
-  const handleStart = () => {
-    toast.success('Suricata service started successfully');
-  };
+  // const handleStart = () => {
+  //   toast.success('Suricata service started successfully');
+  // };
 
-  const handleStop = () => {
-    toast.success('Suricata service stopped');
-  };
+  // const handleStop = () => {
+  //   toast.success('Suricata service stopped');
+  // };
 
-  const handleRestart = () => {
-    toast.success('Suricata service restarted');
-  };
+  // const handleRestart = () => {
+  //   toast.success('Suricata service restarted');
+  // };
 
   return (
     <div className="space-y-6">
@@ -85,17 +83,17 @@ export default function Index() {
           usedRam={latestMetric?.payload?.memory.used}
           freeRam={latestMetric?.payload?.memory.free}
         />
-        <ServiceStatus
+        {/* <ServiceStatus
           isInstalled={agentStatus?.suricata.installed ?? false}
           status={agentStatus?.suricata.running ?? false}
           version={agentStatus?.suricata.version ?? 'N/A'}
           onStart={handleStart}
           onStop={handleStop}
           onRestart={handleRestart}
-        />
+        /> */}
+      <QuickStats recentAlerts={mockAlerts} />
       </div>
 
-      <QuickStats recentAlerts={mockAlerts} />
     </div>
   );
 }

@@ -35,7 +35,7 @@ export default function DashboardLayout(): React.ReactElement {
   return (
     <SidebarProvider>
       <Sidebar />
-      <SidebarInset>
+      <SidebarInset className="overflow-hidden!">
         <header className="flex shrink-0 p-2 items-center gap-2 border-b">
           <SidebarTrigger />
           <AgentSelector />

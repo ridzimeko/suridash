@@ -294,13 +294,14 @@ export default function RealtimeAlerts() {
                     </div>
 
                     <div className="flex gap-2">
-                        <Button onClick={refresh} variant="outline" size="icon">
+                        <Button onClick={refresh} variant="outline">
                             <RefreshCw className="h-4 w-4" />
+                            Refresh
                         </Button>
-                        <Button variant="outline" onClick={handleExport}>
+                        {/* <Button variant="outline" onClick={handleExport}>
                             <Download className="mr-2 h-4 w-4" />
                             Export
-                        </Button>
+                        </Button> */}
                     </div>
                 </div>
             </div>

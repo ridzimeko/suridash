@@ -33,7 +33,7 @@ export default function AppSidebar() {
   const location = useLocation();
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar variant="inset" collapsible="icon">
       {/* HEADER */}
       <SidebarHeader className="h-16 border-b">
         <div className="flex items-center gap-2 px-2">
