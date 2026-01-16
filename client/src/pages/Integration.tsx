@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Save, TestTube } from 'lucide-react';
+import { Tabs, TabsContent, } from '@/components/ui/tabs';
+import { Save, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { getIntegrations, saveIntegration, testIntegration } from "@/services/integration";
@@ -110,14 +110,14 @@ export default function Integration() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Integration</h1>
+        <h1 className="text-3xl font-bold">Notification</h1>
         <p className="text-muted-foreground">
           Configure notification channels for alerts
         </p>
       </div>
 
-      <Tabs defaultValue="email" className="space-y-6">
-        <TabsList>
+      <Tabs defaultValue="telegram" className="space-y-6">
+        {/* <TabsList>
           <TabsTrigger value="email">
             <Mail className="mr-2 h-4 w-4" />
             Email
@@ -126,10 +126,10 @@ export default function Integration() {
             <Send className="mr-2 h-4 w-4" />
             Telegram
           </TabsTrigger>
-        </TabsList>
+        </TabsList> */}
 
         {/* EMAIL TAB */}
-        <TabsContent value="email">
+        {/* <TabsContent value="email">
           <Card>
             <CardHeader>
               <CardTitle>Email Configuration (Brevo)</CardTitle>
@@ -207,7 +207,7 @@ export default function Integration() {
               </Button>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         {/* TELEGRAM TAB */}
         <TabsContent value="telegram">

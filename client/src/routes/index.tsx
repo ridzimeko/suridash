@@ -28,7 +28,7 @@ export default function Routes() {
                 <Route path="/block-history" element={<BlockHistory />} />
                 <Route path="/system-logs" element={<SystemLogs />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/integration" element={<Integration />} />
+                <Route path="/notification" element={<Integration />} />
                 <Route path="/agents" element={<AgentManagement />} />
             </Route>
 

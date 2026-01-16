@@ -26,7 +26,7 @@ const menuItems = [
   { path: "/charts-analytics", icon: BarChart3, label: "Charts & Analytics" },
   { path: "/block-history", icon: Shield, label: "Block History" },
   { path: "/agents", icon: HardDrive, label: "Manage Agents" },
-  { path: "/integration", icon: Plug, label: "Integration" },
+  { path: "/notification", icon: Plug, label: "Notification" },
 ];
 
 export default function AppSidebar() {
