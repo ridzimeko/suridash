@@ -119,7 +119,7 @@ router.post("/heartbeat", async (req: Request, res: Response) => {
     where: eq(agents.id, agent_id),
   });
 
-  if (!agent || agent.apiKeyHash !== apiKey || !agent.isActive) {
+  if (!agent || agent.token !== apiKey || !agent.isActive) {
     return res.status(403).json({ error: "Invalid agent" });
   }
 

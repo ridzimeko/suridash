@@ -9,6 +9,7 @@ import {
   index,
   pgEnum,
   text,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const blockExecutionStatusEnum = pgEnum("block_execution_status", [
@@ -16,6 +17,20 @@ export const blockExecutionStatusEnum = pgEnum("block_execution_status", [
   "executed",
   "failed",
 ]);
+
+
+export const geoIP = pgTable("geoip", {
+  id: serial("id").primaryKey(),
+  ipAddress: varchar("ip", { length: 45 }).notNull().unique(),
+  country: varchar("country", { length: 2 }),
+  city: varchar("city", { length: 128 }),
+  latitude: varchar("latitude", { length: 32 }),
+  longitude: varchar("longitude", { length: 32 }),
+  asName: varchar("as_name", { length: 256 }),
+  asNumber: integer("as_number"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 // 🔹 Riwayat alert penting (bukan semua alert realtime harus disimpan)
 export const alerts = pgTable(
@@ -36,20 +51,12 @@ export const alerts = pgTable(
     signature: varchar("signature", { length: 512 }),
     category: varchar("category", { length: 256 }),
     severity: integer("severity"), // 1 (high) - 3 (low)
-
-    // Info GeoIP (kalau kamu simpan)
-    country: varchar("country"),
-    city: varchar("city", { length: 128 }),
-    latitude: varchar("latitude", { length: 32 }),
-    longitude: varchar("longitude", { length: 32 }),
-    asNumber: varchar("as_number", { length: 32 }),
-    asName: varchar("as_name", { length: 256 }),
-    // as_domain: varchar("as_domain", { length: 256 }),
-
-    // Flag apakah IP ini sempat diblok
-    wasBlocked: boolean("was_blocked").default(false).notNull(),
-
+    alertCount: integer("alert_count").default(1).notNull(),
+    geoipId: integer("geoip_id").references(() => geoIP.id),
     createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 
@@ -57,9 +64,14 @@ export const alerts = pgTable(
     raw: jsonb("raw"),
   },
   (table) => ({
-    idxCreatedAt: index("idx_alerts_created_at").on(table.createdAt),
-    idxSrcIp: index("idx_alerts_src_ip").on(table.srcIp),
-    idxSeverity: index("idx_alerts_severity").on(table.severity),
+     uniqueAlert: uniqueIndex("unique_alert_idx").on(
+      table.signature,
+      table.srcIp,
+      table.srcPort,
+      table.destIp,
+      table.destPort,
+      table.protocol
+    ),
   })
 );
 
@@ -74,23 +86,20 @@ export const blockedIps = pgTable(
     attackType: varchar("attack_type", { length: 128 }), // kategori yang kamu pakai di UI
     blockedUntil: timestamp("blocked_until", { withTimezone: true }),
     isActive: boolean("is_active").default(true).notNull(),
-
     alertCount: integer("alert_count").default(0).notNull(),
 
-    /* =====================
-     * EXECUTION TRACKING
-     * ===================== */
-    executionStatus: blockExecutionStatusEnum("execution_status")
-      .default("pending")
-      .notNull(),
-    executedAt: timestamp("executed_at", {
-      withTimezone: true,
-    }),
-    executionError: text("execution_error"),
+    // /* =====================
+    //  * EXECUTION TRACKING
+    //  * ===================== */
+    // executionStatus: blockExecutionStatusEnum("execution_status")
+    //   .default("pending")
+    //   .notNull(),
+    // executedAt: timestamp("executed_at", {
+    //   withTimezone: true,
+    // }),
+    // executionError: text("execution_error"),
     agentId: varchar("agent_id", { length: 32 }), // agt_xxx
-
-    country: varchar("country", { length: 2 }),
-    city: varchar("city", { length: 128 }),
+    geoipId: integer("geoip_id").references(() => geoIP.id),
 
     // Jika kamu ingin tahu apakah auto-block atau manual admin
     autoBlocked: boolean("auto_blocked").default(true).notNull(),

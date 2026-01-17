@@ -8,6 +8,20 @@
       "when": 1766916424397,
       "tag": "0000_minor_thing",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768582721591,
+      "tag": "0001_tranquil_snowbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768610353392,
+      "tag": "0002_tired_shiva",
+      "breakpoints": true
     }
   ]
 }

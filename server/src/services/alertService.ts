@@ -1,34 +1,11 @@
-import { and, eq, gte } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { alerts, blockedIps } from "../db/schema/dashboard-schema.js";
+import { alerts, geoIP } from "../db/schema/dashboard-schema.js";
 import { fetchGeoIP } from "./geoipService.js";
-import { blockIpAndRecord } from "./ipsetService.js";
 import { notifyAll } from "./notificationService.js";
 
-const DEDUP_WINDOW_MS = 60_000; // 1 menit
-
-async function findSimilarAlert(agentId: string, alert: any) {
-  const since = new Date(Date.now() - DEDUP_WINDOW_MS);
-
-  const rows = await db
-    .select()
-    .from(alerts)
-    .where(
-      and(
-        eq(alerts.agentId, agentId),
-        eq(alerts.signatureId, alert.signatureId),
-        eq(alerts.srcIp, alert.srcIp),
-        eq(alerts.destIp, alert.destIp ?? ""),
-        eq(alerts.protocol, alert.protocol),
-        gte(alerts.createdAt, since)
-      )
-    )
-    .limit(1);
-
-  return rows[0] ?? null;
-}
-
 export async function saveAlert(agentId: string, payload: any) {
+  const blockPrivateIp = process.env.BLOCK_PRIVATE_IP === "true";
   // don't block private IPs
   const IP = payload.srcIp;
   const privateIpRanges = [
@@ -36,31 +13,65 @@ export async function saveAlert(agentId: string, payload: any) {
     /^192\.168\./,
     /^127\./,
     /^169\.254\./,
+    /^172\.(1[6-9]|2\d|3[0-1])\./,
     /^::1$/,
     /^fc00:/,
     /^fe80:/,
   ];
 
-  if (privateIpRanges.some((r) => r.test(IP))) {
+  if (blockPrivateIp && privateIpRanges.some((r) => r.test(IP))) {
     console.log("Skipping private IP alert:", IP);
     return;
   }
 
-  const severityMap = {
-    1: "critical",
-    2: "high",
-    3: "medium",
-    4: "low",
+  // Check if geoip already exists for this IP
+  let geoipId: number | null = null;
+  
+  const existingGeoIP = await db.query.geoIP.findFirst({
+    where: (geoIP, { eq }) => eq(geoIP.ipAddress, payload.srcIp),
+  });
+
+  if (existingGeoIP) {
+    // Use existing geoip record
+    geoipId = existingGeoIP.id;
+    console.log("Using existing GeoIP for:", payload.srcIp);
+  } else {
+    // Fetch new geoip data from API
+    try {
+      const geoData = await fetchGeoIP(payload.srcIp);
+      
+      // Insert new geoip record
+      const [newGeoIP] = await db
+        .insert(geoIP)
+        .values({
+          ipAddress: payload.srcIp,
+          country: geoData.country,
+          city: geoData.city,
+          asName: geoData.asName,
+          asNumber: geoData.asNumber,
+          latitude: geoData.latitude,
+          longitude: geoData.longitude,
+        })
+        .onConflictDoNothing({
+          target: [geoIP.ipAddress],
+        })
+        .returning();
+
+      if (newGeoIP) {
+        geoipId = newGeoIP.id;
+        console.log("Created new GeoIP for:", payload.srcIp);
+      } else {
+        // Race condition: another request inserted it first
+        const retryGeoIP = await db.query.geoIP.findFirst({
+          where: (geoIP, { eq }) => eq(geoIP.ipAddress, payload.srcIp),
+        });
+        geoipId = retryGeoIP?.id ?? null;
+      }
+    } catch (e) {
+      console.error("GeoIP fetch/insert failed:", e);
+      // Continue without geoip data
+    }
   }
-
-  const existing = await findSimilarAlert(agentId, payload);
-
-  if (existing) {
-    console.log("Duplicate alert detected, skipping:", payload.signature);
-    return { existing: true, alert: existing };
-  }
-
-  const geo = await fetchGeoIP(payload.srcIp);
 
   const alert = {
     signature: payload.signature ?? "Unknown",
@@ -70,34 +81,16 @@ export async function saveAlert(agentId: string, payload: any) {
     srcPort: payload.srcPort,
     destIp: payload.destIp,
     destPort: payload.destPort,
+    geoipId: geoipId,
     protocol: payload.protocol,
     createdAt: new Date(payload.timestamp),
+    
     signatureId: payload?.signatureId ?? null,
-    country: geo?.country ?? null,
-    city: geo?.city ?? null,
-    latitude: geo?.latitude ? geo.latitude.toString() : null,
-    longitude: geo?.longitude ? geo.longitude.toString() : null,
-    asNumber: geo?.asn ? geo.asn.toString() : null,
-    asName: geo?.organization_name ?? null,
-    wasBlocked: false,
   };
 
   // Auto-block rules
-  if (IP && (alert.severity === 1 || alert.severity === 2)) {
+  if (IP && alert.severity <= 2) {
     try {
-      // block selama 60 menit misalnya
-      // await blockIpAndRecord({
-      //   ip: IP,
-      //   reason: `Auto block for ${severityMap[alert.severity as keyof typeof severityMap] ?? 'unknown'}`,
-      //   attackType: json.alert?.category,
-      //   ttlMinutes: 60,
-      //   autoBlocked: true,
-      //   city: alert.city,
-      //   country: alert.country,
-      // });
-      // alert.wasBlocked = true;
-      // console.log(`Auto-blocked IP: ${IP}`);
-
       // Notify admins
       console.log("Sending notifications for alert:", IP);
       notifyAll(alert).catch((e) => {
@@ -108,9 +101,38 @@ export async function saveAlert(agentId: string, payload: any) {
     }
   }
 
-  console.log("alert triggered:", alert.srcIp, "severity:", alert.severity, "blocked:", alert.wasBlocked);
+  console.log(
+    "alert triggered:",
+    alert.srcIp,
+    "severity:",
+    alert.severity,
+    "blocked:"
+  );
 
-  await db.insert(alerts).values(alert);
+  const [insertedAlert] = await db
+    .insert(alerts)
+    .values(alert)
+    .onConflictDoUpdate({
+      target: [
+        alerts.signature,
+        alerts.srcIp,
+        alerts.srcPort,
+        alerts.destIp,
+        alerts.destPort,
+        alerts.protocol,
+      ],
+      set: {
+        alertCount: sql`${alerts.alertCount} + 1`,
+        updatedAt: new Date(payload.timestamp),
+      },
+    })
+    .returning();
+
+  // If insertedAlert is undefined, it means conflict occurred (duplicate)
+  if (!insertedAlert) {
+    console.log("Duplicate alert skipped:", alert.srcIp);
+    return { existing: true, alert: null };
+  }
 
   return { existing: false, alert };
 }

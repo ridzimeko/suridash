@@ -24,7 +24,7 @@ export const agents = pgTable("agents", {
 
   status: agentStatusEnum("status").default("offline").notNull(),
 
-  apiKeyHash: text("api_key_hash").notNull(),
+  token: text("token").notNull(),
 
   isActive: boolean("is_active").default(true).notNull(),
 

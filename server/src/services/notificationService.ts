@@ -11,18 +11,18 @@ export async function notifyAll(alert: any) {
 
     for (const { provider, config, enabled } of configs) {
         // send email
-        if (provider === "brevo" && enabled) {
-            try {
-                await sendEmailBrevo({
-                    to: (config as any).emailTo,
-                    subject: `[SuriDash] Alert: ${alert.severity}`,
-                    html: buildEmailTemplate(alert)
-                });
-                console.log("Email sent");
-            } catch (e: any) {
-                console.error("Email notification failed:", e.message);
-            }
-        }
+        // if (provider === "brevo" && enabled) {
+        //     try {
+        //         await sendEmailBrevo({
+        //             to: (config as any).emailTo,
+        //             subject: `[SuriDash] Alert: ${alert.severity}`,
+        //             html: buildEmailTemplate(alert)
+        //         });
+        //         console.log("Email sent");
+        //     } catch (e: any) {
+        //         console.error("Email notification failed:", e.message);
+        //     }
+        // }
 
         // send telegram
         if (provider === "telegram" && enabled) {

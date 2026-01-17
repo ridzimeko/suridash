@@ -15,7 +15,7 @@ export async function createAgent(name: string) {
   await db.insert(agents).values({
     id,
     name,
-    apiKeyHash: hashApiKey(apiKey),
+    token: apiKey,
   })
 
   return {
