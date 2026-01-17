@@ -1,5 +1,4 @@
-import { Navigate, Outlet } from "react-router";
-import { useAuth } from "@/hooks/use-auth";
+import { Outlet } from "react-router";
 
 export default function GuestRoute() {
 

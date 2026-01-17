@@ -34,7 +34,6 @@ import {
     ChevronsRight,
     Search,
     RefreshCw,
-    Download,
     ArrowUpDown,
     ArrowUp,
     ArrowDown
@@ -241,33 +240,33 @@ export default function RealtimeAlerts() {
         table.setPageSize(Number(value));
     };
 
-    // Handle export
-    const handleExport = () => {
-        const headers = ['Time', 'Severity', 'Category', 'Signature', 'Source IP', 'Dest IP', 'Country', 'Status'];
-        const csvContent = [
-            headers.join(','),
-            ...filteredData.map(alert => [
-                dayjs(alert.timestamp).format('YYYY-MM-DD HH:mm:ss'),
-                alert.severity,
-                alert.category,
-                `"${alert.signature.replace(/"/g, '""')}"`,
-                alert.srcIp,
-                alert.destIp,
-                alert.country || 'N/A',
-                alert.blocked ? 'Blocked' : 'Allowed'
-            ].join(','))
-        ].join('\n');
+    // // Handle export
+    // const handleExport = () => {
+    //     const headers = ['Time', 'Severity', 'Category', 'Signature', 'Source IP', 'Dest IP', 'Country', 'Status'];
+    //     const csvContent = [
+    //         headers.join(','),
+    //         ...filteredData.map(alert => [
+    //             dayjs(alert.timestamp).format('YYYY-MM-DD HH:mm:ss'),
+    //             alert.severity,
+    //             alert.category,
+    //             `"${alert.signature.replace(/"/g, '""')}"`,
+    //             alert.srcIp,
+    //             alert.destIp,
+    //             alert.country || 'N/A',
+    //             alert.blocked ? 'Blocked' : 'Allowed'
+    //         ].join(','))
+    //     ].join('\n');
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `alerts-${dayjs().format('YYYY-MM-DD-HHmmss')}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    //     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    //     const link = document.createElement('a');
+    //     const url = URL.createObjectURL(blob);
+    //     link.setAttribute('href', url);
+    //     link.setAttribute('download', `alerts-${dayjs().format('YYYY-MM-DD-HHmmss')}.csv`);
+    //     link.style.visibility = 'hidden';
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    // };
 
     return (
         <div className="space-y-6">

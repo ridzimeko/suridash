@@ -105,7 +105,7 @@ export default function AgentsPage() {
 
     try {
       setCreating(true);
-      const res = await createAgent(agentName.trim());
+      const res = await createAgent(agentName.trim()) as { installCommand: string };
       setInstallCmd(res.installCommand);
       setAgentName("");
       await loadAgents();
