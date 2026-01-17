@@ -82,23 +82,23 @@ router.post("/blocked-ips", async (req: Request, res: Response) => {
   if (!body?.ip) {
     return res.status(400).json({ error: "IP address required" });
   }
+  if (!body?.agentId) {
+    return res.status(400).json({ error: "Agent ID required" });
+  }
 
   const [inserted] = await db
     .insert(blockedIps)
     .values({
       ip: body.ip,
+      agentId: body.agentId,
+      geoipId: body.geoipId ?? null,
       reason: body.reason ?? "Manual block",
-      attackType: body.attackType ?? "Unknown",
       createdAt: new Date(),
       blockedUntil: body.blockedUntil
         ? new Date(body.blockedUntil)
         : null,
       isActive: true,
       autoBlocked: false,
-      executionStatus: "pending",
-      alertCount: 0,
-      city: body.city ?? null,
-      country: body.country ?? null,
     })
     .returning();
 
@@ -121,7 +121,6 @@ router.put("/blocked-ips/:id", async (req: Request, res: Response) => {
     .update(blockedIps)
     .set({
       reason: body.reason,
-      attackType: body.attackType,
       blockedUntil: body.blockedUntil
         ? new Date(body.blockedUntil)
         : undefined,

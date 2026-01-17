@@ -1,6 +1,7 @@
 import { WebSocket } from "ws";
 import { broadcastToDashboard } from "./dashboard.js";
 import { saveAlert } from "src/services/alertService.js";
+import { registerAgent, unregisterAgent } from "src/lib/wsRegistry.js";
 
 export function handleAgentWS(ws: WebSocket, req: any) {
   const agentId = req.headers["x-agent-id"] as string;
@@ -10,6 +11,7 @@ export function handleAgentWS(ws: WebSocket, req: any) {
     return;
   }
 
+  registerAgent(agentId, ws);
   console.log("Agent connected:", agentId);
 
   ws.on("message", async (raw) => {
@@ -56,6 +58,7 @@ export function handleAgentWS(ws: WebSocket, req: any) {
   });
 
   ws.on("close", () => {
+    unregisterAgent(agentId);
     console.log("Agent disconnected:", agentId);
   });
 }

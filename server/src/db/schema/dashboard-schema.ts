@@ -21,7 +21,7 @@ export const blockExecutionStatusEnum = pgEnum("block_execution_status", [
 export const geoIP = pgTable("geoip", {
   id: serial("id").primaryKey(),
   ipAddress: varchar("ip", { length: 45 }).notNull().unique(),
-  country: varchar("country", { length: 2 }),
+  country: varchar("country", { length: 40 }),
   city: varchar("city", { length: 128 }),
   latitude: varchar("latitude", { length: 32 }),
   longitude: varchar("longitude", { length: 32 }),
@@ -84,23 +84,10 @@ export const blockedIps = pgTable(
   {
     id: serial("id").primaryKey(),
     ip: varchar("ip", { length: 45 }).notNull(),
-
     reason: varchar("reason", { length: 512 }), // misal: "SSH brute force", "port scan"
-    attackType: varchar("attack_type", { length: 128 }), // kategori yang kamu pakai di UI
     blockedUntil: timestamp("blocked_until", { withTimezone: true }),
     isActive: boolean("is_active").default(true).notNull(),
     alertCount: integer("alert_count").default(0).notNull(),
-
-    // /* =====================
-    //  * EXECUTION TRACKING
-    //  * ===================== */
-    // executionStatus: blockExecutionStatusEnum("execution_status")
-    //   .default("pending")
-    //   .notNull(),
-    // executedAt: timestamp("executed_at", {
-    //   withTimezone: true,
-    // }),
-    // executionError: text("execution_error"),
     agentId: varchar("agent_id", { length: 32 }), // agt_xxx
     geoipId: integer("geoip_id").references(() => geoIP.id),
 
@@ -109,13 +96,17 @@ export const blockedIps = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
-    updatedAt: timestamp("created_at", { withTimezone: true })
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => ({
     idxBlockedIp: index("idx_blocked_ips_ip").on(table.ip),
     idxBlockedActive: index("idx_blocked_ips_active").on(table.isActive),
+    uniqBlockedIpPerAgent: uniqueIndex("uniq_blocked_ip_per_agent").on(
+      table.ip,
+      table.agentId
+    ),
   })
 );
 

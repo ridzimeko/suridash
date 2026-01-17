@@ -1,8 +1,9 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { alerts, geoIP } from "../db/schema/dashboard-schema.js";
+import { alerts, blockedIps, geoIP } from "../db/schema/dashboard-schema.js";
 import { fetchGeoIP } from "./geoipService.js";
 import { notifyAll } from "./notificationService.js";
+import { sendBlockIp } from "./blockService.js";
 
 export async function saveAlert(agentId: string, payload: any) {
   const blockPrivateIp = process.env.BLOCK_PRIVATE_IP === "true";
@@ -74,6 +75,7 @@ export async function saveAlert(agentId: string, payload: any) {
   }
 
   const alert = {
+    agentId: agentId,
     signature: payload.signature ?? "Unknown",
     category: payload.category ?? "Uncategorized",
     severity: payload.severity,
@@ -113,17 +115,40 @@ export async function saveAlert(agentId: string, payload: any) {
 
   // Auto-block rules
   if (IP && alert.severity <= 2) {
-    if (insertedAlert.alertCount === 1 || insertedAlert.alertCount % 10 === 0) {
       try {
         // Notify admins
         console.log("Sending notifications for alert:", IP);
         notifyAll(alert).catch((e) => {
           console.error("Notification failed:", e);
         });
+
+        // Auto-block via connected agent
+        const blockResult = await sendBlockIp({
+          agentId,
+          ip: alert.srcIp,
+          duration: 3600,
+          severity: alert.severity,
+          alertId: alert.signatureId?.toString(),
+          reason: alert.category,
+        });
+
+        // save to blocked IPs table
+        if (!blockResult) throw new Error("Block IP failed via agent");
+
+        await db.insert(blockedIps).values({
+          ip: alert.srcIp,
+          reason: alert.category,
+          blockedUntil: new Date(Date.now() + 3600 * 1000),
+          isActive: true,
+          alertCount: 1,
+          agentId: agentId,
+        }).onConflictDoNothing({
+          target: [blockedIps.ip],
+        });
+
       } catch (e) {
         console.error("Auto block failed:", e);
       }
-    }
   }
 
   console.log(
@@ -131,7 +156,6 @@ export async function saveAlert(agentId: string, payload: any) {
     alert.srcIp,
     "severity:",
     alert.severity,
-    "blocked:"
   );
 
   // If insertedAlert is undefined, it means conflict occurred (duplicate)
