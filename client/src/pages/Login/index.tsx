@@ -52,13 +52,10 @@ export default function LoginPage(): ReactElement {
                     </div>
                     <div className="mt-5 space-y-2">
                         <h3 className="text-gray-800 text-2xl font-bold sm:text-3xl">
-                            Log in to your account
+                            Welcome back!
                         </h3>
-                        <p>
-                            Don&apos;t have an account?{" "}
-                            <a className="font-medium text-indigo-600 hover:text-indigo-500">
-                                Sign up
-                            </a>
+                        <p className="text-gray-500">
+                            Sign in to your account to continue
                         </p>
                     </div>
                 </div>
@@ -111,14 +108,10 @@ export default function LoginPage(): ReactElement {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full px-4 py-2 text-white font-medium bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-600 disabled:bg-indigo-600/55 disabled:cursor-not-allowed rounded-lg duration-150"
+                        className="w-full px-4 py-2 text-white font-medium bg-primary hover:bg-primary/80 disabled:bg-primary/50 disabled:cursor-not-allowed rounded-lg duration-150"
                     >
                         Sign in
                     </button>
-
-                    <div className="text-center">
-                        <a className="hover:text-indigo-600">Forgot password?</a>
-                    </div>
                 </form>
             </div>
         </main>

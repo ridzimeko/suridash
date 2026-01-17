@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import { useEffect } from "react";
 import { useAgentStore } from "@/store/agent-store";
 import AgentSelector from "../dashboard/header/AgentSelector";
+import { NavUser } from "../dashboard/NavUser";
 
 function InitAgents() {
   const loadAgents = useAgentStore(s => s.loadAgents);
@@ -36,9 +37,15 @@ export default function DashboardLayout(): React.ReactElement {
     <SidebarProvider>
       <Sidebar />
       <SidebarInset className="overflow-hidden!">
-        <header className="flex shrink-0 p-2 items-center gap-2 border-b">
+        <header className="flex shrink-0 p-2 pr-4 items-center gap-2 border-b">
           <SidebarTrigger />
           <AgentSelector />
+          <div className="flex-1" />
+          <NavUser user={{
+            name: user?.name || "Unknown",
+            email: user?.email || '',
+            avatar: ''
+          }} />
         </header>
         <main className="px-6 py-4 overflow-auto">
           <Outlet />

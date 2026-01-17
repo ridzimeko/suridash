@@ -13,7 +13,8 @@ export async function login(email: string, password: string) {
 
 // ⬅ Logout user
 export async function logout() {
-  return api.post("auth/sign-out").json();
+  const res = await authClient.signOut();
+  return res;
 }
 
 // ⬅ Ambil session user
