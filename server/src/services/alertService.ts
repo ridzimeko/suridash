@@ -26,7 +26,7 @@ export async function saveAlert(agentId: string, payload: any) {
 
   // Check if geoip already exists for this IP
   let geoipId: number | null = null;
-  
+
   const existingGeoIP = await db.query.geoIP.findFirst({
     where: (geoIP, { eq }) => eq(geoIP.ipAddress, payload.srcIp),
   });
@@ -39,7 +39,7 @@ export async function saveAlert(agentId: string, payload: any) {
     // Fetch new geoip data from API
     try {
       const geoData = await fetchGeoIP(payload.srcIp);
-      
+
       // Insert new geoip record
       const [newGeoIP] = await db
         .insert(geoIP)
@@ -84,20 +84,45 @@ export async function saveAlert(agentId: string, payload: any) {
     geoipId: geoipId,
     protocol: payload.protocol,
     createdAt: new Date(payload.timestamp),
-    
+
     signatureId: payload?.signatureId ?? null,
   };
 
+  const [insertedAlert] = await db
+    .insert(alerts)
+    .values(alert)
+    .onConflictDoUpdate({
+      target: [
+        alerts.signatureId, // SID sebagai identifier utama
+        alerts.srcIp,
+        alerts.srcPort,
+        alerts.destIp,
+        alerts.destPort,
+        alerts.protocol,
+      ],
+      set: {
+        // Update signature dan category dari rules terbaru
+        signature: payload.signature ?? "Unknown",
+        category: payload.category ?? "Uncategorized",
+        severity: payload.severity, // Update severity juga jika berubah
+        alertCount: sql`${alerts.alertCount} + 1`,
+        updatedAt: new Date(payload.timestamp),
+      },
+    })
+    .returning();
+
   // Auto-block rules
   if (IP && alert.severity <= 2) {
-    try {
-      // Notify admins
-      console.log("Sending notifications for alert:", IP);
-      notifyAll(alert).catch((e) => {
-        console.error("Notification failed:", e);
-      });
-    } catch (e) {
-      console.error("Auto block failed:", e);
+    if (insertedAlert.alertCount === 1 || insertedAlert.alertCount % 10 === 0) {
+      try {
+        // Notify admins
+        console.log("Sending notifications for alert:", IP);
+        notifyAll(alert).catch((e) => {
+          console.error("Notification failed:", e);
+        });
+      } catch (e) {
+        console.error("Auto block failed:", e);
+      }
     }
   }
 
@@ -108,25 +133,6 @@ export async function saveAlert(agentId: string, payload: any) {
     alert.severity,
     "blocked:"
   );
-
-  const [insertedAlert] = await db
-    .insert(alerts)
-    .values(alert)
-    .onConflictDoUpdate({
-      target: [
-        alerts.signature,
-        alerts.srcIp,
-        alerts.srcPort,
-        alerts.destIp,
-        alerts.destPort,
-        alerts.protocol,
-      ],
-      set: {
-        alertCount: sql`${alerts.alertCount} + 1`,
-        updatedAt: new Date(payload.timestamp),
-      },
-    })
-    .returning();
 
   // If insertedAlert is undefined, it means conflict occurred (duplicate)
   if (!insertedAlert) {

@@ -18,7 +18,6 @@ export const blockExecutionStatusEnum = pgEnum("block_execution_status", [
   "failed",
 ]);
 
-
 export const geoIP = pgTable("geoip", {
   id: serial("id").primaryKey(),
   ipAddress: varchar("ip", { length: 45 }).notNull().unique(),
@@ -28,8 +27,12 @@ export const geoIP = pgTable("geoip", {
   longitude: varchar("longitude", { length: 32 }),
   asName: varchar("as_name", { length: 256 }),
   asNumber: integer("as_number"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // 🔹 Riwayat alert penting (bukan semua alert realtime harus disimpan)
@@ -38,7 +41,7 @@ export const alerts = pgTable(
   {
     id: serial("id").primaryKey(),
     agentId: varchar("agent_id", { length: 32 }), // agt_xxx
-    
+
     // Info IP & koneksi
     srcIp: varchar("src_ip", { length: 45 }).notNull(),
     srcPort: integer("src_port"),
@@ -54,18 +57,18 @@ export const alerts = pgTable(
     alertCount: integer("alert_count").default(1).notNull(),
     geoipId: integer("geoip_id").references(() => geoIP.id),
     createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+      .defaultNow()
+      .notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+      .defaultNow()
+      .notNull(),
 
     // Raw JSON dari Suricata event (opsional tapi berguna)
     raw: jsonb("raw"),
   },
   (table) => ({
-     uniqueAlert: uniqueIndex("unique_alert_idx").on(
-      table.signature,
+    uniqueAlert: uniqueIndex("unique_alert_idx").on(
+      table.signatureId, // SID sebagai identifier
       table.srcIp,
       table.srcPort,
       table.destIp,
