@@ -1,12 +1,13 @@
 import MetricCard from '@/components/dashboard/MetricCard';
 import ResourceMonitor from '@/components/dashboard/ResourceMonitor';
 import QuickStats from '@/components/dashboard/QuickStats';
-import { mockAlerts } from '@/lib/mockData';
 import { Bell, Shield, FileCode, Activity } from 'lucide-react';
 import { useWebsocket } from '@/hooks/use-websocket';
 import { useMetricsStore } from '@/store/metrics-store';
 import { useAgentStore } from '@/store/agent-store';
 import { useAgentStatusStore } from '@/store/agent-status-store';
+import { useAgentStats } from '@/hooks/use-agent-stats';
+import { useRecentAlerts } from '@/hooks/use-recent-alerts';
 
 export default function Index() {
   useWebsocket();
@@ -18,6 +19,9 @@ export default function Index() {
     (s) => agentId ? s.statusByAgent[agentId] : undefined
   );
 
+  const stats = useAgentStats(agentId);
+  const recentAlerts = useRecentAlerts(agentId, 5);
+
   const metrics =
     useMetricsStore((s) =>
       agentId ? s.metricsByAgent[agentId] : undefined
@@ -25,17 +29,8 @@ export default function Index() {
 
   const latestMetric = metrics.at(-1);
 
-  // const handleStart = () => {
-  //   toast.success('Suricata service started successfully');
-  // };
-
-  // const handleStop = () => {
-  //   toast.success('Suricata service stopped');
-  // };
-
-  // const handleRestart = () => {
-  //   toast.success('Suricata service restarted');
-  // };
+  const rulesLoaded = agentStatus?.suricata?.rules_loaded ?? 0;
+  const suricataRunning = agentStatus?.suricata?.running ?? false;
 
   return (
     <div className="space-y-6">
@@ -49,24 +44,22 @@ export default function Index() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Total Alerts"
-          value={890}
+          value={stats?.totalAlerts ?? 0}
           icon={Bell}
-          trend={{ value: 12, isPositive: false }}
         />
         <MetricCard
           title="Blocked IPs"
-          value={112}
+          value={stats?.blockedIps ?? 0}
           icon={Shield}
-          trend={{ value: 8, isPositive: true }}
         />
         <MetricCard
           title="Active Rules"
-          value={256}
+          value={rulesLoaded}
           icon={FileCode}
         />
         <MetricCard
           title="Service Status"
-          value={agentStatus?.suricata.running ? 'Running' : 'Stopped'}
+          value={suricataRunning ? 'Running' : 'Stopped'}
           icon={Activity}
           className="capitalize"
         />
@@ -91,7 +84,7 @@ export default function Index() {
           onStop={handleStop}
           onRestart={handleRestart}
         /> */}
-      <QuickStats recentAlerts={mockAlerts} />
+      <QuickStats recentAlerts={recentAlerts.alerts} loading={recentAlerts.loading} />
       </div>
 
     </div>

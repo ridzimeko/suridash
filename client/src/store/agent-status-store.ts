@@ -8,6 +8,7 @@ type AgentStatus = {
     eveLogPath?: string;
     lastModified?: number;
     version?: string;
+    rules_loaded?: number;
   };
 };
 

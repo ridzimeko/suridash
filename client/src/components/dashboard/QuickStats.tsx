@@ -1,18 +1,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { type Alert } from '@/types';
+import type { RecentAlert } from '@/hooks/use-recent-alerts';
 import dayjs from 'dayjs';
 
 interface QuickStatsProps {
-  recentAlerts: Alert[];
+  recentAlerts: RecentAlert[];
+  loading: boolean;
 }
 
-export default function QuickStats({ recentAlerts }: QuickStatsProps) {
+export default function QuickStats({ recentAlerts, loading }: QuickStatsProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Recent Alerts</CardTitle>
       </CardHeader>
       <CardContent>
+        {loading && (
+          <p className="text-sm text-muted-foreground">Loading alerts…</p>
+        )}
+
+        {!loading && recentAlerts.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            No recent alerts
+          </p>
+        )}
+
         <div className="space-y-3">
           {recentAlerts.slice(0, 5).map((alert) => (
             <div
@@ -25,6 +36,7 @@ export default function QuickStats({ recentAlerts }: QuickStatsProps) {
                   {alert.srcIp} → {alert.destIp}
                 </p>
               </div>
+
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">
                   {dayjs(alert.timestamp).format('HH:mm:ss')}
@@ -40,7 +52,7 @@ export default function QuickStats({ recentAlerts }: QuickStatsProps) {
                       : 'text-blue-500'
                   }`}
                 >
-                  {alert.severity}
+                  Sev {alert.severity}
                 </span>
               </div>
             </div>
