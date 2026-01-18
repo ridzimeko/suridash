@@ -114,7 +114,8 @@ export async function saveAlert(agentId: string, payload: any) {
 
   // Auto-block rules
   if (IP && alert.severity <= 2) {
-    try {
+   if (insertedAlert.alertCount === 1 || insertedAlert.alertCount % 10 === 0) {
+     try {
       // Notify admins
       console.log("Sending notifications for alert:", IP);
       notifyAll(alert).catch((e) => {
@@ -133,6 +134,7 @@ export async function saveAlert(agentId: string, payload: any) {
     } catch (e) {
       console.error("Auto block failed:", e);
     }
+   }
   }
 
   console.log("alert triggered:", alert.srcIp, "severity:", alert.severity);

@@ -26,10 +26,10 @@ router.post("/block", async (req, res) => {
   //   return res.status(409).json({ error: "Agent offline" });
   // }
 
-  await db
-    .update(blockedIps)
-    .set({ executionStatus: "executed", executedAt: new Date() })
-    .where(eq(blockedIps.id, blockedIpId));
+  // await db
+  //   .update(blockedIps)
+  //   .set({ executionStatus: "executed", executedAt: new Date() })
+  //   .where(eq(blockedIps.id, blockedIpId));
 
   res.json({ success: true });
 });

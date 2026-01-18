@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../types/index.js";
-import { authMiddleware } from "../middlewares/auth-middleware.js";
+// import { authMiddleware } from "../middlewares/auth-middleware.js";
 import { db } from "../db/index.js";
 import { alerts } from "../db/schema/dashboard-schema.js";
 import { sql, desc } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { sql, desc } from "drizzle-orm";
 export const analyticsRoute = new Hono<AppEnv>();
 
 // Proteksi selurun endpoint analytics
-analyticsRoute.use("/analytics/*", authMiddleware);
+// analyticsRoute.use("/analytics/*", authMiddleware);
 
 /* ------------------------------------
    1. SUMMARY
@@ -81,29 +81,29 @@ analyticsRoute.get("/analytics/top-attackers", async (c) => {
 /* ------------------------------------
    4. ATTACK TIMELINE (24H / 7D / 30D)
 --------------------------------------- */
-analyticsRoute.get("/analytics/attacks-timeline", async (c) => {
-  const range = c.req.query("range") ?? "24h";
+// analyticsRoute.get("/analytics/attacks-timeline", async (c) => {
+//   const range = c.req.query("range") ?? "24h";
 
-  let interval = "1 hour";
-  let where = sql`created_at >= NOW() - INTERVAL '24 hours'`;
+//   let interval = "1 hour";
+//   let where = sql`created_at >= NOW() - INTERVAL '24 hours'`;
 
-  if (range === "7d") {
-    interval = "1 day";
-    where = sql`created_at >= NOW() - INTERVAL '7 days'`;
-  } else if (range === "30d") {
-    interval = "1 day";
-    where = sql`created_at >= NOW() - INTERVAL '30 days'`;
-  }
+//   if (range === "7d") {
+//     interval = "1 day";
+//     where = sql`created_at >= NOW() - INTERVAL '7 days'`;
+//   } else if (range === "30d") {
+//     interval = "1 day";
+//     where = sql`created_at >= NOW() - INTERVAL '30 days'`;
+//   }
 
-  const result = await db.execute(sql`
-    SELECT
-      date_trunc(${interval}, created_at) AS time,
-      COUNT(*) as count
-    FROM alerts
-    WHERE ${where}
-    GROUP BY time
-    ORDER BY time ASC
-  `);
+//   const result = await db.execute(sql`
+//     SELECT
+//       date_trunc(${interval}, created_at) AS time,
+//       COUNT(*) as count
+//     FROM alerts
+//     WHERE ${where}
+//     GROUP BY time
+//     ORDER BY time ASC
+//   `);
 
-  return c.json(result.rows);
-});
+//   return c.json(result.rows);
+// });
