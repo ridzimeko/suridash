@@ -3,7 +3,6 @@ import { db } from "../db/index.js";
 import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { desc, eq, and, sql } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/auth-middleware.js";
-import { unblockIp } from "../services/ipsetService.js";
 import { sendUnblockIp } from "src/services/blockService.js";
 
 const router = Router();
@@ -19,7 +18,7 @@ router.use("/", authMiddleware);
 --------------------------------------------------- */
 router.get("/", async (req: Request, res: Response) => {
   const page = Number(req.query.page ?? 1);
-  const limit = Number(req.query.limit ?? 20);
+  const limit = Number(req.query.limit ?? 200);
   const active = req.query.active as string | undefined;
   const offset = (page - 1) * limit;
 

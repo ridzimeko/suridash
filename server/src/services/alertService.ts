@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { alerts, blockedIps, geoIP } from "../db/schema/dashboard-schema.js";
-import { fetchGeoIP } from "./geoipService.js";
 import { notifyAll } from "./notificationService.js";
 import { sendBlockIp } from "./blockService.js";
 
@@ -25,54 +24,54 @@ export async function saveAlert(agentId: string, payload: any) {
     return;
   }
 
-  // Check if geoip already exists for this IP
-  let geoipId: number | null = null;
+  // // Check if geoip already exists for this IP
+  // let geoipId: number | null = null;
 
-  const existingGeoIP = await db.query.geoIP.findFirst({
-    where: (geoIP, { eq }) => eq(geoIP.ipAddress, payload.srcIp),
-  });
+  // const existingGeoIP = await db.query.geoIP.findFirst({
+  //   where: (geoIP, { eq }) => eq(geoIP.ipAddress, payload.srcIp),
+  // });
 
-  if (existingGeoIP) {
-    // Use existing geoip record
-    geoipId = existingGeoIP.id;
-    console.log("Using existing GeoIP for:", payload.srcIp);
-  } else {
-    // Fetch new geoip data from API
-    try {
-      const geoData = await fetchGeoIP(payload.srcIp);
+  // if (existingGeoIP) {
+  //   // Use existing geoip record
+  //   geoipId = existingGeoIP.id;
+  //   console.log("Using existing GeoIP for:", payload.srcIp);
+  // } else {
+  //   // Fetch new geoip data from API
+  //   try {
+  //     const geoData = await fetchGeoIP(payload.srcIp);
 
-      // Insert new geoip record
-      const [newGeoIP] = await db
-        .insert(geoIP)
-        .values({
-          ipAddress: payload.srcIp,
-          country: geoData.country,
-          city: geoData.city,
-          asName: geoData.asName,
-          asNumber: geoData.asNumber,
-          latitude: geoData.latitude,
-          longitude: geoData.longitude,
-        })
-        .onConflictDoNothing({
-          target: [geoIP.ipAddress],
-        })
-        .returning();
+  //     // Insert new geoip record
+  //     const [newGeoIP] = await db
+  //       .insert(geoIP)
+  //       .values({
+  //         ipAddress: payload.srcIp,
+  //         country: geoData.country,
+  //         city: geoData.city,
+  //         asName: geoData.asName,
+  //         asNumber: geoData.asNumber,
+  //         latitude: geoData.latitude,
+  //         longitude: geoData.longitude,
+  //       })
+  //       .onConflictDoNothing({
+  //         target: [geoIP.ipAddress],
+  //       })
+  //       .returning();
 
-      if (newGeoIP) {
-        geoipId = newGeoIP.id;
-        console.log("Created new GeoIP for:", payload.srcIp);
-      } else {
-        // Race condition: another request inserted it first
-        const retryGeoIP = await db.query.geoIP.findFirst({
-          where: (geoIP, { eq }) => eq(geoIP.ipAddress, payload.srcIp),
-        });
-        geoipId = retryGeoIP?.id ?? null;
-      }
-    } catch (e) {
-      console.error("GeoIP fetch/insert failed:", e);
-      // Continue without geoip data
-    }
-  }
+  //     if (newGeoIP) {
+  //       geoipId = newGeoIP.id;
+  //       console.log("Created new GeoIP for:", payload.srcIp);
+  //     } else {
+  //       // Race condition: another request inserted it first
+  //       const retryGeoIP = await db.query.geoIP.findFirst({
+  //         where: (geoIP, { eq }) => eq(geoIP.ipAddress, payload.srcIp),
+  //       });
+  //       geoipId = retryGeoIP?.id ?? null;
+  //     }
+  //   } catch (e) {
+  //     console.error("GeoIP fetch/insert failed:", e);
+  //     // Continue without geoip data
+  //   }
+  // }
 
   const alert = {
     agentId: agentId,
@@ -83,7 +82,7 @@ export async function saveAlert(agentId: string, payload: any) {
     srcPort: payload.srcPort,
     destIp: payload.destIp,
     destPort: payload.destPort,
-    geoipId: geoipId,
+    // geoipId: geoipId,
     protocol: payload.protocol,
     createdAt: new Date(payload.timestamp),
 
@@ -131,23 +130,6 @@ export async function saveAlert(agentId: string, payload: any) {
         alertId: alert.signatureId?.toString(),
         reason: alert.category,
       });
-
-      // save to blocked IPs table
-      if (!blockResult) throw new Error("Block IP failed via agent");
-
-      await db
-        .insert(blockedIps)
-        .values({
-          ip: alert.srcIp,
-          reason: alert.category,
-          blockedUntil: new Date(Date.now() + 3600 * 1000),
-          isActive: true,
-          alertCount: 1,
-          agentId: agentId,
-        })
-        .onConflictDoNothing({
-          target: [blockedIps.ip, blockedIps.agentId],
-        });
     } catch (e) {
       console.error("Auto block failed:", e);
     }
