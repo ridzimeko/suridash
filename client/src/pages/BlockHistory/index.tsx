@@ -127,13 +127,11 @@ export default function BlockHistory() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Timestamp</TableHead>
                 <TableHead>IP Address</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>City</TableHead>
                 <TableHead>Reason</TableHead>
-                <TableHead>Blocked At</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Alerts</TableHead>
+                <TableHead>Auto Blocked</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -141,33 +139,27 @@ export default function BlockHistory() {
             <TableBody>
               {filteredIPs.map((ip) => (
                 <TableRow key={ip.id}>
-                  <TableCell className="font-mono">{ip.ip}</TableCell>
-
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{ip.countryCode}</span>
-                      <span>{ip.country}</span>
-                    </div>
+                    {dayjs(ip?.createdAt).format("MMM DD, YYYY HH:mm")}
                   </TableCell>
-
-                  <TableCell>{ip.city}</TableCell>
+                  <TableCell className="font-mono">{ip.ip}</TableCell>
 
                   <TableCell>{ip.reason}</TableCell>
 
                   <TableCell>
-                    {dayjs(ip?.createdAt).format("MMM DD, YYYY HH:mm")}
+                    {ip?.autoBlocked ? (
+                      <Badge variant="default">Yes</Badge>
+                    ) : (
+                      <Badge variant="secondary">No</Badge>
+                    )}
                   </TableCell>
 
                   <TableCell>
                     <Badge
-                      variant={ip?.blockedUntil ? "secondary" : "destructive"}
+                      variant={ip?.isActive ? "destructive" : "secondary"}
                     >
-                      {ip.blockedUntil ? "Temporary" : "Permanent"}
+                      {ip?.isActive ? "Blocked" : "Unblocked"}
                     </Badge>
-                  </TableCell>
-
-                  <TableCell className="font-bold text-center">
-                    {ip.alertCount}
                   </TableCell>
 
                   <TableCell>

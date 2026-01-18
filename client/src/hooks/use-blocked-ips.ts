@@ -10,7 +10,34 @@ export function useBlockedIPs() {
   const [data, setData] = useState<BlockedIP[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setLoading(true);
+
+      try {
+        const res = await api.get("blocked-ips").json<BlockedIPResponse>();
+        if (isMounted) {
+          setData(res.data);
+        }
+      } catch (e) {
+        console.error("Failed loading blocked IPs:", e);
+      }
+
+      if (isMounted) {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const refresh = useCallback(async () => {
     setLoading(true);
 
     try {
@@ -23,9 +50,5 @@ export function useBlockedIPs() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { data, loading, refresh: fetchData };
+  return { data, loading, refresh };
 }

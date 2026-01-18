@@ -4,6 +4,7 @@ import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { desc, eq, and, sql } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/auth-middleware.js";
 import { unblockIp } from "../services/ipsetService.js";
+import { sendUnblockIp } from "src/services/blockService.js";
 
 const router = Router();
 
@@ -11,12 +12,12 @@ const router = Router();
  * AUTH MIDDLEWARE
  * Semua route /blocked-ips
  * ========================= */
-router.use("/blocked-ips", authMiddleware);
+router.use("/", authMiddleware);
 
 /* -------------------------------------------------
    GET /api/blocked-ips?page=1&limit=20&active=true
 --------------------------------------------------- */
-router.get("/blocked-ips", async (req: Request, res: Response) => {
+router.get("/", async (req: Request, res: Response) => {
   const page = Number(req.query.page ?? 1);
   const limit = Number(req.query.limit ?? 20);
   const active = req.query.active as string | undefined;
@@ -53,7 +54,7 @@ router.get("/blocked-ips", async (req: Request, res: Response) => {
 /* -------------------------------------------------
    GET /api/blocked-ips/:id
 --------------------------------------------------- */
-router.get("/blocked-ips/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
@@ -76,7 +77,7 @@ router.get("/blocked-ips/:id", async (req: Request, res: Response) => {
    POST /api/blocked-ips
    Body: { ip, reason, attackType, blockedUntil }
 --------------------------------------------------- */
-router.post("/blocked-ips", async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   const body = req.body;
 
   if (!body?.ip) {
@@ -94,9 +95,7 @@ router.post("/blocked-ips", async (req: Request, res: Response) => {
       geoipId: body.geoipId ?? null,
       reason: body.reason ?? "Manual block",
       createdAt: new Date(),
-      blockedUntil: body.blockedUntil
-        ? new Date(body.blockedUntil)
-        : null,
+      blockedUntil: body.blockedUntil ? new Date(body.blockedUntil) : null,
       isActive: true,
       autoBlocked: false,
     })
@@ -109,7 +108,7 @@ router.post("/blocked-ips", async (req: Request, res: Response) => {
    PUT /api/blocked-ips/:id
    Body: { reason?, attackType?, blockedUntil?, isActive? }
 --------------------------------------------------- */
-router.put("/blocked-ips/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
@@ -121,9 +120,7 @@ router.put("/blocked-ips/:id", async (req: Request, res: Response) => {
     .update(blockedIps)
     .set({
       reason: body.reason,
-      blockedUntil: body.blockedUntil
-        ? new Date(body.blockedUntil)
-        : undefined,
+      blockedUntil: body.blockedUntil ? new Date(body.blockedUntil) : undefined,
       isActive: body.isActive,
       updatedAt: new Date(),
     })
@@ -140,7 +137,7 @@ router.put("/blocked-ips/:id", async (req: Request, res: Response) => {
 /* -------------------------------------------------
    DELETE /api/blocked-ips/:id
 --------------------------------------------------- */
-router.delete("/blocked-ips/:id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
     return res.status(400).json({ error: "Invalid ID" });
@@ -161,17 +158,28 @@ router.delete("/blocked-ips/:id", async (req: Request, res: Response) => {
 /* -------------------------------------------------
    POST /api/blocked-ips/:id/unblock
 --------------------------------------------------- */
-router.post(
-  "/blocked-ips/:id/unblock",
-  async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
-    if (Number.isNaN(id)) {
-      return res.status(400).json({ error: "Invalid ID" });
-    }
+router.post("/:id/unblock", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
 
-    const updated = await unblockIp({ id });
-    return res.json({ success: true, data: updated });
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ success: false, message: "Invalid ID" });
   }
-);
+
+  const row = await db
+    .select()
+    .from(blockedIps)
+    .where(eq(blockedIps.id, id))
+    .limit(1);
+
+  if (!row.length) {
+    return res.status(404).json({ success: false, message: "Not found" });
+  }
+
+  const agentId = row[0].agentId;
+  const ip = row[0].ip;
+  const ok = sendUnblockIp(agentId, ip);
+  if (!ok) return res.status(409).json({ success: false, message: "Agent offline" });
+  return res.json({ success: true });
+});
 
 export default router;

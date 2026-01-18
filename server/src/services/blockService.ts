@@ -39,3 +39,22 @@ export function sendBlockIp({
   ws.send(JSON.stringify(payload));
   return true;
 }
+
+export function sendUnblockIp(agentId: string | null, ip: string) {
+  if (!agentId) return false;
+
+  const ws = getAgentSocket(agentId);
+  if (!ws || ws.readyState !== ws.OPEN) {
+    console.warn("Agent not connected:", agentId);
+    return false;
+  }
+
+  const payload = {
+    type: "unblock_ip",
+    ip,
+    timestamp: Date.now(),
+  };
+
+  ws.send(JSON.stringify(payload));
+  return true;
+}

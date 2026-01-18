@@ -75,6 +75,39 @@ const columns: ColumnDef<Alert>[] = [
         },
         sortingFn: 'datetime',
     },
+    // {
+    //     accessorKey: 'signatureId',
+    //     header: 'Signature ID',
+    //     cell: ({ row }) => (
+    //         <div className="text-sm">{row.getValue('signatureId')}</div>
+    //     ),
+    // },
+    {
+        accessorKey: 'signature',
+        header: 'Signature',
+        cell: ({ row }) => {
+            const signature = row.getValue('signature') as string;
+            return (
+                <div className="max-w-xs truncate text-sm" title={signature}>
+                    {signature}
+                </div>
+            );
+        },
+    },
+    {
+        accessorKey: 'category',
+        header: 'Category',
+        cell: ({ row }) => (
+            <div className="text-sm">{row.getValue('category')}</div>
+        ),
+    },
+    {
+        accessorKey: 'srcIp',
+        header: 'Source IP',
+        cell: ({ row }) => (
+            <div className="font-mono text-xs">{row.getValue('srcIp')}</div>
+        ),
+    },
     {
         accessorKey: 'severity',
         header: ({ column }) => {
@@ -96,15 +129,23 @@ const columns: ColumnDef<Alert>[] = [
             );
         },
         cell: ({ row }) => {
-            const severity = row.getValue('severity') as SeverityLevel;
+            const severity = row.getValue('severity') as number;
+            const getSeverityLabel = (severity: number): SeverityLevel => {
+                switch (severity) {
+                    case 1:
+                        return 'high';
+                    case 2:
+                        return 'medium';
+                }
+                return 'low';
+            };
+            const severityLabel = getSeverityLabel(severity);
             const getSeverityColor = (severity: SeverityLevel) => {
                 switch (severity) {
-                    case 'critical':
-                        return 'bg-red-500 hover:bg-red-600';
                     case 'high':
-                        return 'bg-orange-500 hover:bg-orange-600';
+                        return 'bg-red-500 hover:bg-red-600';
                     case 'medium':
-                        return 'bg-yellow-500 hover:bg-yellow-600';
+                        return 'bg-orange-500 hover:bg-orange-600';
                     case 'low':
                         return 'bg-blue-500 hover:bg-blue-600';
                     default:
@@ -113,77 +154,24 @@ const columns: ColumnDef<Alert>[] = [
             };
 
             return (
-                <Badge className={getSeverityColor(severity)}>
-                    {severity}
+                <Badge className={getSeverityColor(severityLabel)}>
+                    {severityLabel.charAt(0).toUpperCase() + severityLabel.slice(1)}
                 </Badge>
             );
         },
         sortingFn: (rowA, rowB, columnId) => {
-            const order = { critical: 4, high: 3, medium: 2, low: 1 };
+            const order = { high: 1, medium: 2, low: 3 };
             const a = order[rowA.getValue(columnId) as SeverityLevel] || 0;
             const b = order[rowB.getValue(columnId) as SeverityLevel] || 0;
             return a > b ? 1 : a < b ? -1 : 0;
         },
     },
     {
-        accessorKey: 'category',
-        header: 'Category',
+        accessorKey: 'alertCount',
+        header: 'Alerts Count',
         cell: ({ row }) => (
-            <div className="text-sm">{row.getValue('category')}</div>
+            <Badge variant="secondary">{row.getValue('alertCount')}</Badge>
         ),
-    },
-    {
-        accessorKey: 'signature',
-        header: 'Signature',
-        cell: ({ row }) => {
-            const signature = row.getValue('signature') as string;
-            return (
-                <div className="max-w-xs truncate text-sm" title={signature}>
-                    {signature}
-                </div>
-            );
-        },
-    },
-    {
-        accessorKey: 'srcIp',
-        header: 'Source IP',
-        cell: ({ row }) => (
-            <div className="font-mono text-xs">{row.getValue('srcIp')}</div>
-        ),
-    },
-
-    {
-        accessorKey: 'city',
-        header: 'City',
-        cell: ({ row }) => (
-            <div className="font-mono text-xs">{row.getValue('city')}</div>
-        ),
-    },
-    {
-        accessorKey: 'asName',
-        header: 'AS Name',
-        cell: ({ row }) => (
-            <div className="font-mono text-xs">{row.getValue('asName')}</div>
-        ),
-    },
-    {
-        accessorKey: 'country',
-        header: 'Country',
-        cell: ({ row }) => (
-            <div className="text-sm">{row.getValue('country') || 'N/A'}</div>
-        ),
-    },
-    {
-        accessorKey: 'wasBlocked',
-        header: 'Status',
-        cell: ({ row }) => {
-            const blocked = row.getValue('wasBlocked') as boolean;
-            return blocked ? (
-                <Badge variant="destructive">Blocked</Badge>
-            ) : (
-                <Badge variant="secondary">Allowed</Badge>
-            );
-        },
     },
 ];
 
@@ -199,10 +187,9 @@ export default function RealtimeAlerts() {
     // Apply filters before passing to table
     const filteredData = useMemo(() => {
         const severityMap: Record<string, SeverityLevel> = {
-            1: 'critical',
-            2: 'high',
-            3: 'medium',
-            4: 'low'
+            1: 'high',
+            2: 'medium',
+            3: 'low'
         };
 
         return alerts.filter((alert) => {
@@ -326,7 +313,6 @@ export default function RealtimeAlerts() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Severities</SelectItem>
-                                <SelectItem value="critical">Critical</SelectItem>
                                 <SelectItem value="high">High</SelectItem>
                                 <SelectItem value="medium">Medium</SelectItem>
                                 <SelectItem value="low">Low</SelectItem>

@@ -1,4 +1,4 @@
-export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
+export type SeverityLevel = 'low' | 'medium' | 'high';
 export type LogLevel = 'info' | 'warning' | 'error';
 export type ServiceStatus = 'running' | 'stopped' | 'error';
 export type RuleAction = 'alert' | 'drop' | 'reject';
@@ -61,9 +61,9 @@ export interface BlockedIP {
   countryCode: string;
   reason: string;
   createdAt: Date;
-  blockedUntil: Date;
-  duration: string;
+  autoBlocked: boolean;
   alertCount: number;
+  isActive: boolean;
 }
 
 export interface AttackStats {

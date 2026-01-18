@@ -49,8 +49,12 @@ export function handleAgentWS(ws: WebSocket, req: any) {
         });
       }
 
-      if (msg.type === "ack") {
+      if (msg.type === "block_ip_ack") {
         console.log("ACK from agent:", agentId, msg);
+      }
+
+      if (msg.type === "unblock_ip_ack") {
+        console.log("Unblock IP ACK from agent:", agentId, msg);
       }
     } catch (err) {
       console.error("Invalid agent WS message", err);
