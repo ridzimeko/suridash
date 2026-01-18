@@ -10,6 +10,8 @@ export async function saveAlert(agentId: string, payload: any) {
   const IP = payload.srcIp;
   const privateIpRanges = [
     /^10\./,
+    /^100\.64\./,
+    /^100\.100\./,
     /^192\.168\./,
     /^127\./,
     /^169\.254\./,
