@@ -29,8 +29,7 @@ export default function BlockHistory() {
   // Modal states
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedIP, setSelectedIP] = useState<BlockedIP|null>(null);
+  const [selectedIP] = useState<BlockedIP|null>(null);
 
   const filteredIPs = blockedIPs.filter(
     (ip) =>
