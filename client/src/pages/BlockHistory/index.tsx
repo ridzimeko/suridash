@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 
 import dayjs from 'dayjs';
-import { Search, Unlock, Plus, RotateCw } from 'lucide-react';
+import { Search, RotateCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { api } from '@/lib/api';
@@ -29,6 +29,7 @@ export default function BlockHistory() {
   // Modal states
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedIP, setSelectedIP] = useState<BlockedIP|null>(null);
 
   const filteredIPs = blockedIPs.filter(
@@ -38,10 +39,10 @@ export default function BlockHistory() {
   );
 
   // ----- HANDLE UNBLOCK -----
-  function openUnblockModal(ip: BlockedIP) {
-    setSelectedIP(ip);
-    setConfirmOpen(true);
-  }
+  // function openUnblockModal(ip: BlockedIP) {
+  //   setSelectedIP(ip);
+  //   setConfirmOpen(true);
+  // }
 
   async function confirmUnblock() {
     try {
@@ -92,10 +93,6 @@ export default function BlockHistory() {
             <RotateCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-
-          <Button onClick={() => setAddModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Add Block
-          </Button>
         </div>
       </div>
 
@@ -130,9 +127,7 @@ export default function BlockHistory() {
                 <TableHead>Timestamp</TableHead>
                 <TableHead>IP Address</TableHead>
                 <TableHead>Reason</TableHead>
-                <TableHead>Auto Blocked</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -147,14 +142,6 @@ export default function BlockHistory() {
                   <TableCell>{ip.reason}</TableCell>
 
                   <TableCell>
-                    {ip?.autoBlocked ? (
-                      <Badge variant="default">Yes</Badge>
-                    ) : (
-                      <Badge variant="secondary">No</Badge>
-                    )}
-                  </TableCell>
-
-                  <TableCell>
                     <Badge
                       variant={ip?.isActive ? "destructive" : "secondary"}
                     >
@@ -162,12 +149,6 @@ export default function BlockHistory() {
                     </Badge>
                   </TableCell>
 
-                  <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => openUnblockModal(ip)}>
-                      <Unlock className="w-4 h-4 mr-2" />
-                      Unblock
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
