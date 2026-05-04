@@ -3,10 +3,14 @@ import cors from "cors";
 
 const app = express();
 
-import "dotenv/config";
+
+
+const origins = process.env.ORIGINS_URLS
+  ? process.env.ORIGINS_URLS.split(",").map((origin) => origin.trim())
+  : ["http://localhost:5173"];
 
 const corsOptions = {
-  origin: process.env.ORIGIN_URL || "http://localhost:5173", // frontend origin
+  origin: origins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization", "x-requested-with"],

@@ -21,4 +21,5 @@ export default defineConfig({
   server: {
     cors: false, // disable Vite's built-in CORS setting
   },
+  envDir: "../",
 })

@@ -35,7 +35,7 @@ services:
       - "5173:5173"
 
   db:
-    image: postgres:15
+    image: postgres:16
     container_name: suridash-db
     restart: always
     environment:

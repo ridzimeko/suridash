@@ -2,10 +2,10 @@
   "name": "server",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file=../.env src/index.ts",
     "build": "tsc",
-    "start": "node dist/src/index.js",
-    "seed:user": "tsx src/scripts/seed-user.ts",
+    "start": "node --env-file=../.env dist/src/index.js",
+    "seed:user": "tsx --env-file=../.env src/scripts/seed-user.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
