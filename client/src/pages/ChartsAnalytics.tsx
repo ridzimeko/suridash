@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
@@ -17,19 +17,75 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { mockTimelineData } from "@/lib/mockData";
+import { api } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 
-const COLORS = ["#f97316", "#eab308", "#3b82f6", "#ef4444", "#8b5cf6"];
+const COLORS = ["#f97316", "#eab308", "#3b82f6", "#ef4444", "#8b5cf6", "#10b981", "#ec4899", "#06b6d4"];
+
+type AttackCategory = {
+  type: string;
+  count: number;
+  percentage: number;
+};
+
+type TimelineEntry = {
+  timestamp: string;
+  [category: string]: string | number;
+};
 
 export default function ChartsAnalytics() {
-  const [attackStats] = useState([
-    { type: "DDoS", count: 456, percentage: 36.5 },
-    { type: "Port Scanning", count: 312, percentage: 25.0 },
-    { type: "Brute Force", count: 289, percentage: 23.2 },
-    { type: "Malware", count: 123, percentage: 9.9 },
-    { type: "Other", count: 67, percentage: 5.4 },
-  ]);
-  const [timelineData] = useState(mockTimelineData);
+  const [attackStats, setAttackStats] = useState<AttackCategory[]>([]);
+  const [timelineData, setTimelineData] = useState<TimelineEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const [categoryRes, timelineRes] = await Promise.all([
+          api.get("analytics/attacks-by-category").json<AttackCategory[]>(),
+          api.get("analytics/attacks-timeline").json<TimelineEntry[]>(),
+        ]);
+
+        setAttackStats(categoryRes ?? []);
+        setTimelineData(timelineRes ?? []);
+      } catch (err) {
+        console.error("Failed to fetch analytics:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  // Extract unique category names from timeline data + attackStats for dynamic Area rendering
+  const categoryKeys = useMemo(() => {
+    const keys = new Set<string>();
+    // From timeline data
+    for (const entry of timelineData) {
+      for (const key of Object.keys(entry)) {
+        if (key !== "timestamp") {
+          keys.add(key);
+        }
+      }
+    }
+    // Fallback: also include categories from attackStats
+    for (const stat of attackStats) {
+      if (stat.type) {
+        keys.add(stat.type);
+      }
+    }
+    return Array.from(keys);
+  }, [timelineData, attackStats]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -46,46 +102,54 @@ export default function ChartsAnalytics() {
             <CardTitle>Attack Types Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={attackStats}
-                  dataKey="count"
-                  nameKey="type"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={(entry) =>
-                    `${entry.payload.type}: ${entry.payload.percentage}%`
-                  }
-                >
-                  {attackStats.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {attackStats.length === 0 ? (
+              <p className="text-center text-muted-foreground py-12">No data available</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={attackStats}
+                    dataKey="count"
+                    nameKey="type"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label={(entry) =>
+                      `${entry.payload.type}: ${entry.payload.percentage}%`
+                    }
+                  >
+                    {attackStats.map((_, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Attack Count by Type</CardTitle>
+            <CardTitle>Attack Count by Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={attackStats}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="type" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#f97316" />
-              </BarChart>
-            </ResponsiveContainer>
+            {attackStats.length === 0 ? (
+              <p className="text-center text-muted-foreground py-12">No data available</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={attackStats}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="type" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#f97316" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -95,90 +159,30 @@ export default function ChartsAnalytics() {
           <CardTitle>24-Hour Attack Timeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <AreaChart data={timelineData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="ddos"
-                stackId="1"
-                stroke="#ef4444"
-                fill="#ef4444"
-                name="DDoS"
-              />
-              <Area
-                type="monotone"
-                dataKey="portScan"
-                stackId="1"
-                stroke="#f97316"
-                fill="#f97316"
-                name="Port Scan"
-              />
-              <Area
-                type="monotone"
-                dataKey="bruteForce"
-                stackId="1"
-                stroke="#eab308"
-                fill="#eab308"
-                name="Brute Force"
-              />
-              <Area
-                type="monotone"
-                dataKey="malware"
-                stackId="1"
-                stroke="#3b82f6"
-                fill="#3b82f6"
-                name="Malware"
-              />
-              <Area
-                type="monotone"
-                dataKey="other"
-                stackId="1"
-                stroke="#8b5cf6"
-                fill="#8b5cf6"
-                name="Other"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Attack Trends</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={timelineData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="ddos"
-                stroke="#ef4444"
-                name="DDoS"
-              />
-              <Line
-                type="monotone"
-                dataKey="portScan"
-                stroke="#f97316"
-                name="Port Scan"
-              />
-              <Line
-                type="monotone"
-                dataKey="bruteForce"
-                stroke="#eab308"
-                name="Brute Force"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {timelineData.length === 0 ? (
+            <p className="text-center text-muted-foreground py-12">No data available</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <AreaChart data={timelineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="timestamp" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {categoryKeys.map((key, index) => (
+                  <Area
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    stackId="1"
+                    stroke={COLORS[index % COLORS.length]}
+                    fill={COLORS[index % COLORS.length]}
+                    name={key}
+                  />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
     </div>
