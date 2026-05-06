@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { api } from "@/lib/api";
 import { Loader2 } from "lucide-react";
+import { useAgentStore } from "@/store/agent-store";
 
 const COLORS = ["#f97316", "#eab308", "#3b82f6", "#ef4444", "#8b5cf6", "#10b981", "#ec4899", "#06b6d4"];
 
@@ -37,14 +38,19 @@ export default function ChartsAnalytics() {
   const [attackStats, setAttackStats] = useState<AttackCategory[]>([]);
   const [timelineData, setTimelineData] = useState<TimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const { selectedAgentId } = useAgentStore();
 
   useEffect(() => {
     async function fetchData() {
+      if (!selectedAgentId) return;
+
       setLoading(true);
       try {
+        const searchParams = { agentId: selectedAgentId };
+
         const [categoryRes, timelineRes] = await Promise.all([
-          api.get("analytics/attacks-by-category").json<AttackCategory[]>(),
-          api.get("analytics/attacks-timeline").json<TimelineEntry[]>(),
+          api.get("analytics/attacks-by-category", { searchParams }).json<AttackCategory[]>(),
+          api.get("analytics/attacks-timeline", { searchParams }).json<TimelineEntry[]>(),
         ]);
 
         setAttackStats(categoryRes ?? []);
@@ -57,7 +63,7 @@ export default function ChartsAnalytics() {
     }
 
     fetchData();
-  }, []);
+  }, [selectedAgentId]);
 
   // Extract unique category names from timeline data + attackStats for dynamic Area rendering
   const categoryKeys = useMemo(() => {

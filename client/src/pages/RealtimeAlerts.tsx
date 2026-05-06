@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     flexRender,
     getCoreRowModel,
@@ -41,7 +41,8 @@ import {
 
 import dayjs from 'dayjs';
 import type { SeverityLevel, Alert } from '@/types';
-import { useAlerts } from '@/hooks/use-alerts';
+import { useAlertStore } from '@/store/alert-store';
+import { useAgentStore } from '@/store/agent-store';
 
 // Define columns for the table
 const columns: ColumnDef<Alert>[] = [
@@ -179,10 +180,16 @@ export default function RealtimeAlerts() {
     const [searchTerm, setSearchTerm] = useState('');
     const [severityFilter, setSeverityFilter] = useState<string>('all');
     const [sorting, setSorting] = useState<SortingState>([
-        { id: 'timestamp', desc: true } // Default sort by latest first
+        { id: 'createdAt', desc: true } // Default sort by latest first
     ]);
 
-    const { alerts, refresh } = useAlerts(1, 500);
+    const { selectedAgentId } = useAgentStore();
+    const { alerts, loadAlerts, wsStatus: status } = useAlertStore();
+
+    // Fetch historical data on mount
+    useEffect(() => {
+        loadAlerts();
+    }, [loadAlerts]);
 
     // Apply filters before passing to table
     const filteredData = useMemo(() => {
@@ -193,15 +200,16 @@ export default function RealtimeAlerts() {
         };
 
         return alerts.filter((alert) => {
+            const matchesAgent = !selectedAgentId || alert.agentId === selectedAgentId;
             const matchesSearch =
                 alert.srcIp.includes(searchTerm) ||
                 alert.destIp.includes(searchTerm) ||
                 alert.signature.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesSeverity =
                 severityFilter === 'all' || severityMap[alert.severity] === severityFilter;
-            return matchesSearch && matchesSeverity;
+            return matchesAgent && matchesSearch && matchesSeverity;
         });
-    }, [alerts, searchTerm, severityFilter]);
+    }, [alerts, searchTerm, severityFilter, selectedAgentId]);
 
     // Configure table
     const table = useReactTable({
@@ -280,14 +288,10 @@ export default function RealtimeAlerts() {
                     </div>
 
                     <div className="flex gap-2">
-                        <Button onClick={refresh} variant="outline">
+                        <Button onClick={loadAlerts} variant="outline">
                             <RefreshCw className="h-4 w-4" />
                             Refresh
                         </Button>
-                        {/* <Button variant="outline" onClick={handleExport}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Export
-                        </Button> */}
                     </div>
                 </div>
             </div>

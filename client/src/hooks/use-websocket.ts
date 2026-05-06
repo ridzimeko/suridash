@@ -24,6 +24,7 @@ export function useWebsocket() {
 
       ws.onopen = () => {
         console.log("✅ Dashboard WS connected");
+        useAlertStore.getState().setWsStatus("connected");
       };
 
       ws.onmessage = (event) => {
@@ -51,10 +52,12 @@ export function useWebsocket() {
 
       ws.onclose = () => {
         console.warn("⚠️ Dashboard WS disconnected, retrying...");
+        useAlertStore.getState().setWsStatus("disconnected");
         retryTimeout.current = setTimeout(connect, RETRY_DELAY);
       };
 
       ws.onerror = () => {
+        useAlertStore.getState().setWsStatus("error");
         ws.close();
       };
     };

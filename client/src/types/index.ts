@@ -5,10 +5,13 @@ export type RuleAction = 'alert' | 'drop' | 'reject';
 
 export interface Alert {
   id: string;
+  agentId?: string;
   timestamp: Date;
+  createdAt: Date;
   severity: number;
   category: string;
   signature: string;
+  signatureId?: number;
   srcIp: string;
   srcPort: number;
   destIp: string;
@@ -19,6 +22,7 @@ export interface Alert {
   latitude: number;
   longitude: number;
   blocked: boolean;
+  alertCount: number;
 }
 
 export interface Rule {

@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
 import { alerts } from "../db/schema/dashboard-schema.js";
-import { sql, desc } from "drizzle-orm";
+import { sql, desc, eq, and } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/auth-middleware.js";
 
 const router = Router();
@@ -14,20 +14,24 @@ router.use("/", authMiddleware);
 --------------------------------------- */
 router.get("/summary", async (req: Request, res: Response) => {
   try {
+    const agentId = req.query.agentId as string | undefined;
+    const agentFilter = agentId ? eq(alerts.agentId, agentId) : undefined;
+
     const [totalRows, highRows, mediumRows, lowRows] = await Promise.all([
-      db.select({ total: sql<number>`count(*)` }).from(alerts),
+      db.select({ total: sql<number>`count(*)` }).from(alerts)
+        .where(agentFilter),
       db
         .select({ high: sql<number>`count(*)` })
         .from(alerts)
-        .where(sql`severity = 1`),
+        .where(agentFilter ? and(sql`severity = 1`, agentFilter) : sql`severity = 1`),
       db
         .select({ medium: sql<number>`count(*)` })
         .from(alerts)
-        .where(sql`severity = 2`),
+        .where(agentFilter ? and(sql`severity = 2`, agentFilter) : sql`severity = 2`),
       db
         .select({ low: sql<number>`count(*)` })
         .from(alerts)
-        .where(sql`severity = 3`),
+        .where(agentFilter ? and(sql`severity = 3`, agentFilter) : sql`severity = 3`),
     ]);
 
     const total = totalRows[0]?.total ?? 0;
@@ -53,12 +57,16 @@ router.get("/summary", async (req: Request, res: Response) => {
 --------------------------------------- */
 router.get("/attacks-by-category", async (req: Request, res: Response) => {
   try {
+    const agentId = req.query.agentId as string | undefined;
+    const agentFilter = agentId ? eq(alerts.agentId, agentId) : undefined;
+
     const result = await db
       .select({
         category: alerts.category,
         count: sql<number>`SUM(${alerts.alertCount})`,
       })
       .from(alerts)
+      .where(agentFilter)
       .groupBy(alerts.category)
       .orderBy(desc(sql`SUM(${alerts.alertCount})`));
 
@@ -81,12 +89,16 @@ router.get("/attacks-by-category", async (req: Request, res: Response) => {
 --------------------------------------- */
 router.get("/top-attackers", async (req: Request, res: Response) => {
   try {
+    const agentId = req.query.agentId as string | undefined;
+    const agentFilter = agentId ? eq(alerts.agentId, agentId) : undefined;
+
     const result = await db
       .select({
         srcIp: alerts.srcIp,
         count: sql<number>`SUM(${alerts.alertCount})`,
       })
       .from(alerts)
+      .where(agentFilter)
       .groupBy(alerts.srcIp)
       .orderBy(desc(sql`SUM(${alerts.alertCount})`))
       .limit(10);
@@ -102,13 +114,17 @@ router.get("/top-attackers", async (req: Request, res: Response) => {
 --------------------------------------- */
 router.get("/attacks-timeline", async (req: Request, res: Response) => {
   try {
-    // Fetch alerts grouped by hour and category (last 7 days, grouped by hour-of-day)
+    const agentId = req.query.agentId as string | undefined;
+    const agentCondition = agentId ? sql`AND agent_id = ${agentId}` : sql``;
+
+    // Fetch alerts grouped by hour and category
     const result = await db.execute(sql`
       SELECT
         TO_CHAR(date_trunc('hour', updated_at), 'HH24:MI') AS time,
         category,
         SUM(alert_count) as count
       FROM alerts
+      WHERE 1=1 ${agentCondition}
       GROUP BY time, category
       ORDER BY time ASC
     `);
@@ -135,7 +151,7 @@ router.get("/attacks-timeline", async (req: Request, res: Response) => {
         timelineMap.set(time, { timestamp: time });
       }
       const entry = timelineMap.get(time);
-      entry[row.category] = Number(row.count);
+      entry[row.category || "Unknown"] = Number(row.count);
     }
 
     // Convert map to array
