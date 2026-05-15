@@ -70,7 +70,7 @@ const columns: ColumnDef<Alert>[] = [
             const createdAt = row.getValue('createdAt') as string;
             return (
                 <div className="font-mono text-xs">
-                    {dayjs(createdAt).format('HH:mm:ss')}
+                    {dayjs(createdAt).format('MMM DD, YYYY HH:mm:ss')}
                 </div>
             );
         },
