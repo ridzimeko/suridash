@@ -1,12 +1,19 @@
 import { sendTelegram } from "./telegramService.js";
 import { db } from "../db/index.js";
 import { integrations } from "../db/schema/dashboard-schema.js";
+import { agents } from "../db/schema/agents.js";
+import { eq } from "drizzle-orm";
 
 export async function notifyAll(alert: any) {
   const configs = await db.select().from(integrations);
+  const agent = await db
+    .select()
+    .from(agents)
+    .where(eq(agents.id, alert.agentId))
+    .limit(1);
   if (!configs.length) return;
 
-  const message = formatAlertMessage(alert);
+  const message = formatAlertMessage(alert, agent[0]);
 
   for (const { provider, config, enabled } of configs) {
     // send telegram
@@ -21,11 +28,11 @@ export async function notifyAll(alert: any) {
   }
 }
 
-function formatAlertMessage(alert: any) {
+function formatAlertMessage(alert: any, agent: any) {
   return `
 🚨 *Suricata Alert Detected*
 
-Agent : ${alert.agent}
+Agent : ${agent.name}
 
 • Severity: *${alert.severity}*
 • Signature: ${alert.signature}
