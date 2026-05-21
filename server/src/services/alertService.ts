@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { alerts, blockedIps, geoIP } from "../db/schema/dashboard-schema.js";
+import { alerts, blockedIps } from "../db/schema/dashboard-schema.js";
 import { notifyAll } from "./notificationService.js";
 
 export async function saveAlert(agentId: string, payload: any) {

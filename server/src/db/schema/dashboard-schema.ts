@@ -18,23 +18,6 @@ export const blockExecutionStatusEnum = pgEnum("block_execution_status", [
   "failed",
 ]);
 
-export const geoIP = pgTable("geoip", {
-  id: serial("id").primaryKey(),
-  ipAddress: varchar("ip", { length: 45 }).notNull().unique(),
-  country: varchar("country", { length: 40 }),
-  city: varchar("city", { length: 128 }),
-  latitude: varchar("latitude", { length: 32 }),
-  longitude: varchar("longitude", { length: 32 }),
-  asName: varchar("as_name", { length: 256 }),
-  asNumber: integer("as_number"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
 // 🔹 Riwayat alert penting (bukan semua alert realtime harus disimpan)
 export const alerts = pgTable(
   "alerts",
@@ -55,7 +38,6 @@ export const alerts = pgTable(
     category: varchar("category", { length: 256 }),
     severity: integer("severity"), // 1 (high) - 3 (low)
     alertCount: integer("alert_count").default(1).notNull(),
-    geoipId: integer("geoip_id").references(() => geoIP.id),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -73,9 +55,9 @@ export const alerts = pgTable(
       table.srcPort,
       table.destIp,
       table.destPort,
-      table.protocol
+      table.protocol,
     ),
-  })
+  }),
 );
 
 // 🔹 Riwayat IP yang diblokir firewall
@@ -85,62 +67,24 @@ export const blockedIps = pgTable(
     id: serial("id").primaryKey(),
     ip: varchar("ip", { length: 45 }).notNull(),
     reason: varchar("reason", { length: 512 }), // misal: "SSH brute force", "port scan"
-    blockedUntil: timestamp("blocked_until", { withTimezone: true }),
-    isActive: boolean("is_active").default(true).notNull(),
-    alertCount: integer("alert_count").default(0).notNull(),
     agentId: varchar("agent_id", { length: 32 }), // agt_xxx
-    geoipId: integer("geoip_id").references(() => geoIP.id),
 
     // Jika kamu ingin tahu apakah auto-block atau manual admin
-    autoBlocked: boolean("auto_blocked").default(true).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
+    lastSeen: timestamp("last_seen", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => ({
     idxBlockedIp: index("idx_blocked_ips_ip").on(table.ip),
-    idxBlockedActive: index("idx_blocked_ips_active").on(table.isActive),
     uniqBlockedIpPerAgent: uniqueIndex("uniq_blocked_ip_per_agent").on(
       table.ip,
-      table.agentId
+      table.agentId,
     ),
-  })
+  }),
 );
-
-// 🔹 Rules custom yang di-edit dari dashboard
-export const suricataRules = pgTable("suricata_rules", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: varchar("description", { length: 1024 }),
-  agentId: varchar("agent_id", { length: 32 }), // agt_xxx
-
-  // isi rule Suricata lengkap
-  ruleText: varchar("rule_text", { length: 4096 }).notNull(),
-
-  enabled: boolean("enabled").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-
-  // optional: userId untuk tahu siapa yang bikin/edit
-  // createdBy: varchar("created_by", { length: 255 }),
-});
-
-// 🔹 Log service suricata / backend untuk ditampilkan di System Logs
-export const systemLogs = pgTable("system_logs", {
-  id: serial("id").primaryKey(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  level: varchar("level", { length: 16 }).default("info").notNull(), // info/warn/error
-  source: varchar("source", { length: 64 }).default("backend").notNull(), // suricata/backend/firewall
-  message: varchar("message", { length: 1024 }).notNull(),
-  meta: jsonb("meta"), // detail tambahan (objek JSON)
-});
 
 export const integrations = pgTable("integrations", {
   id: serial("id").primaryKey(),

@@ -14,18 +14,14 @@ const router = Router();
 router.use("/", authMiddleware);
 
 /* -------------------------------------------------
-   GET /api/blocked-ips?page=1&limit=20&active=true
+   GET /api/blocked-ips?page=1&limit=20
 --------------------------------------------------- */
 router.get("/", async (req: Request, res: Response) => {
   const page = Number(req.query.page ?? 1);
   const limit = Number(req.query.limit ?? 200);
-  const active = req.query.active as string | undefined;
   const offset = (page - 1) * limit;
 
   const filters: any[] = [];
-
-  if (active === "true") filters.push(eq(blockedIps.isActive, true));
-  if (active === "false") filters.push(eq(blockedIps.isActive, false));
 
   const where = filters.length ? and(...filters) : undefined;
 
@@ -91,12 +87,9 @@ router.post("/", async (req: Request, res: Response) => {
     .values({
       ip: body.ip,
       agentId: body.agentId,
-      geoipId: body.geoipId ?? null,
       reason: body.reason ?? "Manual block",
       createdAt: new Date(),
-      blockedUntil: body.blockedUntil ? new Date(body.blockedUntil) : null,
-      isActive: true,
-      autoBlocked: false,
+      lastSeen: new Date(),
     })
     .returning();
 
@@ -113,15 +106,10 @@ router.put("/:id", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid ID" });
   }
 
-  const body = req.body;
-
   const updated = await db
     .update(blockedIps)
     .set({
-      reason: body.reason,
-      blockedUntil: body.blockedUntil ? new Date(body.blockedUntil) : undefined,
-      isActive: body.isActive,
-      updatedAt: new Date(),
+      lastSeen: new Date(),
     })
     .where(eq(blockedIps.id, id))
     .returning();
@@ -177,7 +165,8 @@ router.post("/:id/unblock", async (req: Request, res: Response) => {
   const agentId = row[0].agentId;
   const ip = row[0].ip;
   const ok = sendUnblockIp(agentId, ip);
-  if (!ok) return res.status(409).json({ success: false, message: "Agent offline" });
+  if (!ok)
+    return res.status(409).json({ success: false, message: "Agent offline" });
   return res.json({ success: true });
 });
 
