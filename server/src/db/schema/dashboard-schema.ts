@@ -52,9 +52,7 @@ export const alerts = pgTable(
     uniqueAlert: uniqueIndex("unique_alert_idx").on(
       table.signatureId, // SID sebagai identifier
       table.srcIp,
-      table.srcPort,
       table.destIp,
-      table.destPort,
       table.protocol,
     ),
   }),

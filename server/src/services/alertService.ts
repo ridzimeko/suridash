@@ -47,9 +47,7 @@ export async function saveAlert(agentId: string, payload: any) {
       target: [
         alerts.signatureId, // SID sebagai identifier utama
         alerts.srcIp,
-        alerts.srcPort,
         alerts.destIp,
-        alerts.destPort,
         alerts.protocol,
       ],
       set: {
@@ -57,6 +55,8 @@ export async function saveAlert(agentId: string, payload: any) {
         signature: payload.signature ?? "Unknown",
         category: payload.category ?? "Uncategorized",
         severity: payload.severity, // Update severity juga jika berubah
+        srcPort: payload.srcPort, // Perbarui ke port terakhir
+        destPort: payload.destPort, // Perbarui ke port terakhir
         alertCount: sql`${alerts.alertCount} + 1`,
         updatedAt: new Date(payload.timestamp),
       },

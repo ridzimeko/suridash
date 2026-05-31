@@ -41,9 +41,7 @@ export const useAlertStore = create<AlertState>((set) => ({
         (a) =>
           a.signatureId === alert.signatureId &&
           a.srcIp === alert.srcIp &&
-          a.srcPort === alert.srcPort &&
           a.destIp === alert.destIp &&
-          a.destPort === alert.destPort &&
           a.protocol === alert.protocol,
       );
 
