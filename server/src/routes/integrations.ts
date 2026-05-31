@@ -53,6 +53,27 @@ router.post("/", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "provider and config are required" });
   }
 
+  // Check if provider already exists
+  const existing = await db
+    .select()
+    .from(integrations)
+    .where(eq(integrations.provider, body.provider))
+    .limit(1);
+
+  if (existing.length > 0) {
+    const [updated] = await db
+      .update(integrations)
+      .set({
+        config: body.config,
+        enabled: body.enabled ?? true,
+        updatedAt: new Date(),
+      })
+      .where(eq(integrations.id, existing[0].id))
+      .returning();
+      
+    return res.status(200).json({ success: true, data: updated });
+  }
+
   const [inserted] = await db
     .insert(integrations)
     .values({

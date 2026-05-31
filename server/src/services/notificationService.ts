@@ -15,9 +15,17 @@ export async function notifyAll(alert: any) {
 
   const message = formatAlertMessage(alert, agent[0]);
 
-  for (const { provider, config, enabled } of configs) {
+  // Gunakan Map untuk memastikan setiap provider hanya dikirim sekali
+  const uniqueConfigs = new Map();
+  for (const config of configs) {
+    if (config.enabled && !uniqueConfigs.has(config.provider)) {
+      uniqueConfigs.set(config.provider, config);
+    }
+  }
+
+  for (const { provider, config } of uniqueConfigs.values()) {
     // send telegram
-    if (provider === "telegram" && enabled) {
+    if (provider === "telegram") {
       try {
         await sendTelegram({ message, parse_mode: "Markdown" });
         console.log("Telegram sent");
