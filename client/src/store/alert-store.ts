@@ -7,7 +7,7 @@ type AlertState = {
   wsStatus: "connected" | "disconnected" | "error";
   setWsStatus: (status: "connected" | "disconnected" | "error") => void;
   addAlert: (a: Alert) => void;
-  loadAlerts: () => Promise<void>;
+  loadAlerts: (agentId?: string | null) => Promise<void>;
 };
 
 export const useAlertStore = create<AlertState>((set) => ({
@@ -16,10 +16,15 @@ export const useAlertStore = create<AlertState>((set) => ({
 
   setWsStatus: (wsStatus) => set({ wsStatus }),
 
-  loadAlerts: async () => {
+  loadAlerts: async (agentId?: string | null) => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const searchParams: any = { page: 1, limit: 200 };
+      if (agentId) searchParams.agentId = agentId;
+
       const res = await api
-        .get("alerts", { searchParams: { page: 1, limit: 200 } })
+        .get("alerts", { searchParams })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .json<any>();
       if (res && res.data) {
         set({ alerts: res.data });
@@ -39,7 +44,7 @@ export const useAlertStore = create<AlertState>((set) => ({
           a.srcPort === alert.srcPort &&
           a.destIp === alert.destIp &&
           a.destPort === alert.destPort &&
-          a.protocol === alert.protocol
+          a.protocol === alert.protocol,
       );
 
       if (existingIdx !== -1) {

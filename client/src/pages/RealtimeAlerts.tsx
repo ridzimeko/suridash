@@ -188,8 +188,8 @@ export default function RealtimeAlerts() {
 
     // Fetch historical data on mount
     useEffect(() => {
-        loadAlerts();
-    }, [loadAlerts]);
+        loadAlerts(selectedAgentId);
+    }, [loadAlerts, selectedAgentId]);
 
     // Apply filters before passing to table
     const filteredData = useMemo(() => {
@@ -275,7 +275,7 @@ export default function RealtimeAlerts() {
 
                 <div className="flex items-center gap-3">
                     <div className="flex gap-2">
-                        <Button onClick={loadAlerts} variant="outline">
+                        <Button onClick={() => loadAlerts(selectedAgentId)} variant="outline">
                             <RefreshCw className="h-4 w-4" />
                             Refresh
                         </Button>

@@ -31,6 +31,7 @@ router.get("/", async (req: Request, res: Response) => {
     : undefined;
 
   const srcIp = req.query.src_ip as string | undefined;
+  const agentId = req.query.agentId as string | undefined;
   const sort = req.query.sort === "asc" ? "asc" : "desc";
 
   const where: any[] = [];
@@ -39,6 +40,9 @@ router.get("/", async (req: Request, res: Response) => {
   }
   if (srcIp) {
     where.push(eq(alerts.srcIp, srcIp));
+  }
+  if (agentId) {
+    where.push(eq(alerts.agentId, agentId));
   }
 
   const total = await db
