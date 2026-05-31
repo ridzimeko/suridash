@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { useAgentStore } from "@/store/agent-store";
 import AgentSelector from "../dashboard/header/AgentSelector";
 import { NavUser } from "../dashboard/NavUser";
+import { useWebsocket } from "@/hooks/use-websocket";
 
 function InitAgents() {
   const loadAgents = useAgentStore(s => s.loadAgents);
@@ -19,6 +20,11 @@ function InitAgents() {
     loadAgents();
   }, [loadAgents]);
 
+  return null;
+}
+
+function WebsocketInit() {
+  useWebsocket();
   return null;
 }
 
@@ -54,6 +60,7 @@ export default function DashboardLayout(): React.ReactElement {
 
       <Toaster position="bottom-right" />
       <InitAgents />
+      <WebsocketInit />
     </SidebarProvider>
   );
 }

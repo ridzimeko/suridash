@@ -2,7 +2,6 @@ import MetricCard from '@/components/dashboard/MetricCard';
 import ResourceMonitor from '@/components/dashboard/ResourceMonitor';
 import QuickStats from '@/components/dashboard/QuickStats';
 import { Bell, Shield, FileCode, Activity } from 'lucide-react';
-import { useWebsocket } from '@/hooks/use-websocket';
 import { useMetricsStore } from '@/store/metrics-store';
 import { useAgentStore } from '@/store/agent-store';
 import { useAgentStatusStore } from '@/store/agent-status-store';
@@ -10,7 +9,6 @@ import { useAgentStats } from '@/hooks/use-agent-stats';
 import { useRecentAlerts } from '@/hooks/use-recent-alerts';
 
 export default function Index() {
-  useWebsocket();
 
   // ganti nanti pakai dropdown agent
   const agentId = useAgentStore((s) => s.selectedAgentId);

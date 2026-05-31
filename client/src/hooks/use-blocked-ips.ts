@@ -6,7 +6,7 @@ type BlockedIPResponse = {
   data: BlockedIP[];
 };
 
-export function useBlockedIPs() {
+export function useBlockedIPs(agentId?: string | null) {
   const [data, setData] = useState<BlockedIP[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,8 @@ export function useBlockedIPs() {
       setLoading(true);
 
       try {
-        const res = await api.get("blocked-ips").json<BlockedIPResponse>();
+        const url = agentId ? `blocked-ips?agentId=${agentId}` : "blocked-ips";
+        const res = await api.get(url).json<BlockedIPResponse>();
         if (isMounted) {
           setData(res.data);
         }
@@ -35,20 +36,21 @@ export function useBlockedIPs() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [agentId]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
 
     try {
-      const res = await api.get("blocked-ips").json<BlockedIPResponse>();
+      const url = agentId ? `blocked-ips?agentId=${agentId}` : "blocked-ips";
+      const res = await api.get(url).json<BlockedIPResponse>();
       setData(res.data);
     } catch (e) {
       console.error("Failed loading blocked IPs:", e);
     }
 
     setLoading(false);
-  }, []);
+  }, [agentId]);
 
   return { data, loading, refresh };
 }

@@ -22,6 +22,10 @@ router.get("/", async (req: Request, res: Response) => {
   const offset = (page - 1) * limit;
 
   const filters: any[] = [];
+  
+  if (req.query.agentId) {
+    filters.push(eq(blockedIps.agentId, String(req.query.agentId)));
+  }
 
   const where = filters.length ? and(...filters) : undefined;
 

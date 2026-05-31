@@ -20,9 +20,11 @@ import { useBlockedIPs } from '@/hooks/use-blocked-ips';
 import { ConfirmDialog } from './ConfirmDialog';
 import { AddBlockModal } from './AddBlockModal';
 import type { BlockedIP } from '@/types';
+import { useAgentStore } from '@/store/agent-store';
 
 export default function BlockHistory() {
-  const { data: blockedIPs, refresh } = useBlockedIPs();
+  const { selectedAgentId } = useAgentStore();
+  const { data: blockedIPs, refresh } = useBlockedIPs(selectedAgentId);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Modal states
