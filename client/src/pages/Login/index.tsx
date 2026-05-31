@@ -2,9 +2,12 @@ import { login } from "@/services/auth";
 import { Activity } from "lucide-react";
 import { useState, type ReactElement } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router";
+import { useNavigate, Navigate } from "react-router";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function LoginPage(): ReactElement {
+    const { user, loading: authLoading } = useAuth();
+    
     const {
         register,
         handleSubmit,
@@ -14,6 +17,14 @@ export default function LoginPage(): ReactElement {
     const [serverError, setServerError] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    if (authLoading) {
+        return <div className="w-full h-screen flex items-center justify-center">Loading...</div>;
+    }
+
+    if (!authLoading && user) {
+        return <Navigate to="/" replace />;
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function onSubmit(data: any) {
