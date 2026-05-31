@@ -184,7 +184,7 @@ export default function RealtimeAlerts() {
     ]);
 
     const { selectedAgentId } = useAgentStore();
-    const { alerts, loadAlerts, wsStatus: status } = useAlertStore();
+    const { alerts, loadAlerts } = useAlertStore();
 
     // Fetch historical data on mount
     useEffect(() => {
@@ -274,19 +274,6 @@ export default function RealtimeAlerts() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* Socket status indicator */}
-                    <div className="flex items-center gap-2">
-                        <span
-                            className={`h-3 w-3 rounded-full animate-pulse ${status === 'connected'
-                                ? 'bg-green-500'
-                                : status === 'error'
-                                    ? 'bg-red-500'
-                                    : 'bg-yellow-500'
-                                }`}
-                        ></span>
-                        <span className="text-sm capitalize">{status}</span>
-                    </div>
-
                     <div className="flex gap-2">
                         <Button onClick={loadAlerts} variant="outline">
                             <RefreshCw className="h-4 w-4" />

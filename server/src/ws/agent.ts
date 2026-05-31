@@ -3,9 +3,11 @@ import { broadcastToDashboard } from "./dashboard.js";
 import { saveAlert } from "src/services/alertService.js";
 import { registerAgent, unregisterAgent } from "src/lib/wsRegistry.js";
 import { blockedIps } from "src/db/schema/dashboard-schema.js";
+import { agents } from "src/db/schema/agents.js";
 import { db } from "src/db/index.js";
+import { eq } from "drizzle-orm";
 
-export function handleAgentWS(ws: WebSocket, req: any) {
+export async function handleAgentWS(ws: WebSocket, req: any) {
   const agentId = req.headers["x-agent-id"] as string;
 
   if (!agentId) {
@@ -15,6 +17,22 @@ export function handleAgentWS(ws: WebSocket, req: any) {
 
   registerAgent(agentId, ws);
   console.log("Agent connected:", agentId);
+
+  try {
+    await db
+      .update(agents)
+      .set({ status: "online", lastSeenAt: new Date() })
+      .where(eq(agents.id, agentId));
+      
+    broadcastToDashboard({
+      agentId,
+      type: "agent_connection_status",
+      payload: { status: "online", lastSeenAt: new Date().toISOString() },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error("Failed to update agent online status", err);
+  }
 
   ws.on("message", async (raw) => {
     try {
@@ -72,8 +90,24 @@ export function handleAgentWS(ws: WebSocket, req: any) {
     }
   });
 
-  ws.on("close", () => {
+  ws.on("close", async () => {
     unregisterAgent(agentId);
     console.log("Agent disconnected:", agentId);
+
+    try {
+      await db
+        .update(agents)
+        .set({ status: "offline", lastSeenAt: new Date() })
+        .where(eq(agents.id, agentId));
+
+      broadcastToDashboard({
+        agentId,
+        type: "agent_connection_status",
+        payload: { status: "offline", lastSeenAt: new Date().toISOString() },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error("Failed to update agent offline status", err);
+    }
   });
 }

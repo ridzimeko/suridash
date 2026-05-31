@@ -16,6 +16,7 @@ interface AgentStore {
   loadAgents: () => Promise<void>;
   selectAgent: (id: string) => void;
   clearSelectionIfDeleted: (id: string) => void;
+  updateAgentStatus: (id: string, status: "online" | "offline", lastSeenAt?: string) => void;
 }
 
 export const useAgentStore = create<AgentStore>((set, get) => ({
@@ -54,5 +55,13 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
       const next = agents.find(a => a.id !== id);
       set({ selectedAgentId: next?.id ?? null });
     }
+  },
+
+  updateAgentStatus: (id, status, lastSeenAt) => {
+    const { agents } = get();
+    const updatedAgents = agents.map(a => 
+      a.id === id ? { ...a, status, lastSeenAt: lastSeenAt || a.lastSeenAt } : a
+    );
+    set({ agents: updatedAgents });
   },
 }));

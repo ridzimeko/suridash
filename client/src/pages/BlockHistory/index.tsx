@@ -4,7 +4,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 
 import {
   Table, TableBody, TableCell,
@@ -126,7 +125,6 @@ export default function BlockHistory() {
                 <TableHead>Timestamp</TableHead>
                 <TableHead>IP Address</TableHead>
                 <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -139,15 +137,6 @@ export default function BlockHistory() {
                   <TableCell className="font-mono">{ip.ip}</TableCell>
 
                   <TableCell>{ip.reason}</TableCell>
-
-                  <TableCell>
-                    <Badge
-                      variant={ip?.isActive ? "destructive" : "secondary"}
-                    >
-                      {ip?.isActive ? "Blocked" : "Unblocked"}
-                    </Badge>
-                  </TableCell>
-
                 </TableRow>
               ))}
             </TableBody>

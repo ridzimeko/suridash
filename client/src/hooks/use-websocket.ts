@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useMetricsStore } from "@/store/metrics-store";
 import { useAgentStatusStore } from "@/store/agent-status-store";
 import { useAlertStore } from "@/store/alert-store";
+import { useAgentStore } from "@/store/agent-store";
 
 const RETRY_DELAY = 3000; // 3 detik
 
@@ -44,6 +45,14 @@ export function useWebsocket() {
           if (data.type === "suricata_alert") {
             console.log("New Suricata alert received:", data.payload);
             useAlertStore.getState().addAlert(data.data);
+          }
+
+          if (data.type === "agent_connection_status") {
+             useAgentStore.getState().updateAgentStatus(
+               data.agentId, 
+               data.payload.status, 
+               data.payload.lastSeenAt
+             );
           }
         } catch (err) {
           console.error("Invalid WS message", err);
