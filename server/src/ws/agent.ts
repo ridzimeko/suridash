@@ -16,13 +16,16 @@ export async function handleAgentWS(ws: WebSocket, req: any) {
   }
 
   registerAgent(agentId, ws);
-  console.log("Agent connected:", agentId);
 
   try {
-    await db
+    const updatedAgent = await db
       .update(agents)
       .set({ status: "online", lastSeenAt: new Date() })
-      .where(eq(agents.id, agentId));
+      .where(eq(agents.id, agentId))
+      .returning();
+      
+    const agentName = updatedAgent[0]?.name || "Unknown";
+    console.log(`Agent connected: ${agentName} (${agentId})`);
       
     broadcastToDashboard({
       agentId,
@@ -92,13 +95,16 @@ export async function handleAgentWS(ws: WebSocket, req: any) {
 
   ws.on("close", async () => {
     unregisterAgent(agentId);
-    console.log("Agent disconnected:", agentId);
 
     try {
-      await db
+      const updatedAgent = await db
         .update(agents)
         .set({ status: "offline", lastSeenAt: new Date() })
-        .where(eq(agents.id, agentId));
+        .where(eq(agents.id, agentId))
+        .returning();
+
+      const agentName = updatedAgent[0]?.name || "Unknown";
+      console.log(`Agent disconnected: ${agentName} (${agentId})`);
 
       broadcastToDashboard({
         agentId,

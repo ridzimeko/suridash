@@ -27,7 +27,7 @@ export default function Index() {
 
   const latestMetric = metrics.at(-1);
 
-  const rulesLoaded = agentStatus?.suricata?.rules_loaded ?? 0;
+  const rulesLoaded = agentStatus?.suricata?.rulesLoaded ?? 0;
   const suricataRunning = agentStatus?.suricata?.running ?? false;
 
   return (
