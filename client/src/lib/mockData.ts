@@ -18,6 +18,8 @@ export const mockAlerts: Alert[] = [
     latitude: 55.7558,
     longitude: 37.6173,
     blocked: true,
+    createdAt: new Date(),
+    alertCount: 1,
   },
   {
     id: '2',
@@ -35,6 +37,8 @@ export const mockAlerts: Alert[] = [
     latitude: 39.9042,
     longitude: 116.4074,
     blocked: true,
+    createdAt: new Date(),
+    alertCount: 1,
   },
   {
     id: '3',
@@ -52,6 +56,8 @@ export const mockAlerts: Alert[] = [
     latitude: 52.3676,
     longitude: 4.9041,
     blocked: true,
+    createdAt: new Date(),
+    alertCount: 1,
   },
   {
     id: '4',
@@ -69,6 +75,8 @@ export const mockAlerts: Alert[] = [
     latitude: 50.4501,
     longitude: 30.5234,
     blocked: false,
+    createdAt: new Date(),
+    alertCount: 1,
   },
   {
     id: '5',
@@ -86,6 +94,8 @@ export const mockAlerts: Alert[] = [
     latitude: 37.7749,
     longitude: -122.4194,
     blocked: false,
+    createdAt: new Date(),
+    alertCount: 1,
   },
 ];
 
