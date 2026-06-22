@@ -32,21 +32,20 @@ export default function LoginPage(): ReactElement {
         setLoading(true);
 
         try {
-            const res = await login(data.email, data.password);
+            await login(data.email, data.password);
             
-            if (res.error) {
-                throw new Error(res.error.message);
-            }
-
             setTimeout(() => {
                 navigate("/", { replace: true });
             }, 50);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-            const msg =
-                err?.response?.data?.error ??
-                "Login gagal, periksa email & password.";
-
+            let msg = "Login gagal, periksa email & password.";
+            if (err.response) {
+                try {
+                    const errData = await err.response.json();
+                    msg = errData.error || msg;
+                } catch (e) {}
+            }
             setServerError(msg);
         } finally {
             setLoading(false);

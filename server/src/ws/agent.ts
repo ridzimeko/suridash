@@ -23,10 +23,10 @@ export async function handleAgentWS(ws: WebSocket, req: any) {
       .set({ status: "online", lastSeenAt: new Date() })
       .where(eq(agents.id, agentId))
       .returning();
-      
+
     const agentName = updatedAgent[0]?.name || "Unknown";
     console.log(`Agent connected: ${agentName} (${agentId})`);
-      
+
     broadcastToDashboard({
       agentId,
       type: "agent_connection_status",

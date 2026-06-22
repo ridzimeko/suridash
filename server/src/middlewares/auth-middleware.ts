@@ -1,5 +1,17 @@
 import type { Request, Response, NextFunction } from "express";
-import { auth } from "../lib/auth.js";
+import { db } from "../db/index.js";
+import { users, Session } from "../db/schema/auth-schema.js";
+import { eq } from "drizzle-orm";
+
+const parseCookies = (cookieHeader?: string) => {
+  if (!cookieHeader) return {};
+  return Object.fromEntries(
+    cookieHeader.split(';').map(c => {
+      const parts = c.trim().split('=');
+      return [parts[0], parts.slice(1).join('=')];
+    })
+  );
+};
 
 export async function authMiddleware(
   req: Request,
@@ -7,22 +19,38 @@ export async function authMiddleware(
   next: NextFunction
 ) {
   try {
-    // 🔐 Ambil session dari Better Auth (cookie-based)
-    const session = await auth.api.getSession({
-      headers: req.headers as HeadersInit,
-    });
-
-    // ❌ Tidak ada session
-    if (!session) {
+    const cookies = parseCookies(req.headers.cookie);
+    const token = cookies.session;
+    
+    if (!token) {
       return res.status(401).json({
         error: "Unauthorized",
         message: "Please login first.",
       });
     }
 
-    // ✅ Inject ke request (pengganti c.set)
-    (req as any).user = session.user;
-    (req as any).session = session.session;
+    const [sessionRecord] = await db.select().from(Session).where(eq(Session.token, token));
+    if (!sessionRecord || new Date(sessionRecord.expiresAt) < new Date()) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Invalid or expired session.",
+      });
+    }
+
+    const [userRecord] = await db.select().from(users).where(eq(users.id, sessionRecord.userId));
+    if (!userRecord) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "User not found.",
+      });
+    }
+
+    (req as any).user = {
+      id: userRecord.id,
+      email: userRecord.email,
+      name: userRecord.name,
+    };
+    (req as any).session = sessionRecord;
 
     return next();
   } catch (err) {

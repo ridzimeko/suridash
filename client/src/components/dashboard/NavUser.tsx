@@ -57,8 +57,9 @@ export function NavUser({
 
       <DropdownMenuItem
         className="text-red-600 focus:text-red-600"
-        onClick={() => {
-          logout();
+        onClick={async () => {
+          await logout();
+          window.location.href = '/';
         }}
       >
         <LogOut className="mr-2 h-4 w-4" />

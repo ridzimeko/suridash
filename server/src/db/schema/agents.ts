@@ -18,10 +18,6 @@ export const agents = pgTable("agents", {
 
   name: varchar("name", { length: 100 }).notNull(),
 
-  hostname: varchar("hostname", { length: 100 }),
-
-  ipAddress: varchar("ip_address", { length: 45 }), // IPv4 / IPv6
-
   status: agentStatusEnum("status").default("offline").notNull(),
 
   token: text("token").notNull(),

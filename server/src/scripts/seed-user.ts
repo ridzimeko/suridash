@@ -1,23 +1,27 @@
-import { auth } from "../lib/auth.js";
+import { db } from "../db/index.js";
+import { users } from "../db/schema/auth-schema.js";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 async function seed() {
   console.log("➡ Creating seed admin user...");
 
-  const res = await auth.api.signUpEmail({
-    body: {
-      email: "admin@suridash.id",
-      password: "Admin123!",
-      name: "Super Admin",
-    },
-    asResponse: true
-  });
+  try {
+    const hashedPassword = await bcrypt.hash("Admin123!", 10);
+    const userId = crypto.randomUUID();
 
-  if (!res.ok) {
-    console.error("❌ Failed to create user:", res.statusText);
+    await db.insert(users).values({
+      id: userId,
+      email: "admin@suridash.id",
+      password: hashedPassword,
+      name: "Super Admin",
+    });
+
+    console.log("✅ User created successfully!");
+  } catch (error) {
+    console.error("❌ Failed to create user:", error);
     process.exit(1);
   }
-
-  console.log("✅ User created:", res.statusText);
 
   process.exit(0);
 }
