@@ -77,10 +77,6 @@ export const blockedIps = pgTable(
   },
   (table) => ({
     idxBlockedIp: index("idx_blocked_ips_ip").on(table.ip),
-    uniqBlockedIpPerAgent: uniqueIndex("uniq_blocked_ip_per_agent").on(
-      table.ip,
-      table.agentId,
-    ),
   }),
 );
 

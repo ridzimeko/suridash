@@ -80,11 +80,8 @@ export async function handleAgentWS(ws: WebSocket, req: any) {
             .insert(blockedIps)
             .values({
               ip: msg.ip,
-              reason: msg.reason ?? "Auto-blocked by agent",
+              reason: msg.reason,
               agentId: agentId,
-            })
-            .onConflictDoNothing({
-              target: [blockedIps.ip, blockedIps.agentId],
             });
         }
       }
