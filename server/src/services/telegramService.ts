@@ -26,18 +26,36 @@ export async function sendTelegram({ message, parse_mode = 'HTML' }: TelegramPar
   const bot_token = config.bot_token;
   if (!bot_token) throw new Error("Telegram bot token not configured");
 
-  const res = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      chat_id: config.chat_id,
-      text: message,
-      parse_mode,
-    }),
-  });
+  const chatIds = config.chat_id
+    ? config.chat_id.split(",").map((id) => id.trim()).filter(Boolean)
+    : [];
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
+  if (chatIds.length === 0) throw new Error("Telegram chat ID not configured");
+
+  const results = await Promise.allSettled(
+    chatIds.map(async (chat_id) => {
+      const res = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id,
+          text: message,
+          parse_mode,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Failed to send to ${chat_id}: ${err}`);
+      }
+    })
+  );
+
+  const errors = results
+    .filter((r) => r.status === "rejected")
+    .map((r: any) => r.reason.message);
+
+  if (errors.length > 0) {
+    throw new Error(`Telegram error(s): ${errors.join(" | ")}`);
   }
 }
