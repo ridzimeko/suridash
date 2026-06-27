@@ -3,6 +3,8 @@ import { db } from "../db/index.js";
 import { alerts, blockedIps } from "../db/schema/dashboard-schema.js";
 import { notifyAll } from "./notificationService.js";
 
+const notificationThrottle = new Map<string, number>();
+
 export async function saveAlert(agentId: string, payload: any) {
   const blockPrivateIp = process.env.BLOCK_PRIVATE_IP === "true";
   // don't block private IPs
@@ -65,8 +67,15 @@ export async function saveAlert(agentId: string, payload: any) {
 
   // Auto-block rules
   // if (IP && alert.severity <= 2) {
-  if (insertedAlert.alertCount === 1 || insertedAlert.alertCount % 10 === 0) {
+  const throttleKey = `${insertedAlert.signatureId}-${insertedAlert.srcIp}`;
+  const lastNotified = notificationThrottle.get(throttleKey) || 0;
+  const now = Date.now();
+  const FIFTEEN_MINUTES = 15 * 60 * 1000;
+
+  if (insertedAlert.alertCount === 1 || (now - lastNotified) > FIFTEEN_MINUTES) {
     console.log("Sending notifications for alert:", IP);
+    notificationThrottle.set(throttleKey, now);
+    
     notifyAll(alert).catch((e) => {
       console.error("Notification failed:", e);
     });
