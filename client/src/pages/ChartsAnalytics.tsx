@@ -182,6 +182,7 @@ export default function ChartsAnalytics() {
                     stroke={COLORS[index % COLORS.length]}
                     fill={COLORS[index % COLORS.length]}
                     name={key}
+                    connectNulls={true}
                   />
                 ))}
               </AreaChart>

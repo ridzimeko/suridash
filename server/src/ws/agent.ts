@@ -5,7 +5,7 @@ import { registerAgent, unregisterAgent } from "src/lib/wsRegistry.js";
 import { blockedIps } from "src/db/schema/dashboard-schema.js";
 import { agents } from "src/db/schema/agents.js";
 import { db } from "src/db/index.js";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export async function handleAgentWS(ws: WebSocket, req: any) {
   const agentId = req.headers["x-agent-id"] as string;
@@ -76,13 +76,31 @@ export async function handleAgentWS(ws: WebSocket, req: any) {
         console.log("ACK from agent:", agentId, msg);
 
         if (msg.ok) {
-          await db
-            .insert(blockedIps)
-            .values({
-              ip: msg.ip,
-              reason: msg.reason,
-              agentId: agentId,
-            });
+          const existing = await db
+            .select()
+            .from(blockedIps)
+            .where(
+              and(
+                eq(blockedIps.ip, msg.ip),
+                eq(blockedIps.agentId, agentId),
+                eq(blockedIps.reason, msg.reason)
+              )
+            );
+            
+          // Debounce: Ignore if the exact same IP was blocked within the last 60 seconds
+          const isSpam = existing.some(
+            (b) => new Date(b.createdAt).getTime() > Date.now() - 60000
+          );
+
+          if (!isSpam) {
+            await db
+              .insert(blockedIps)
+              .values({
+                ip: msg.ip,
+                reason: msg.reason,
+                agentId: agentId,
+              });
+          }
         }
       }
     } catch (err) {

@@ -4,6 +4,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 import {
   Table, TableBody, TableCell,
@@ -31,8 +33,16 @@ export default function BlockHistory() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIP] = useState<BlockedIP|null>(null);
+  const [showUnique, setShowUnique] = useState(true);
 
-  const filteredIPs = blockedIPs.filter(
+  // Apply unique filter if enabled
+  const processedIPs = showUnique
+    ? blockedIPs.filter((ip, index, self) =>
+        index === self.findIndex((t) => t.ip === ip.ip)
+      )
+    : blockedIPs;
+
+  const filteredIPs = processedIPs.filter(
     (ip) =>
       ip.ip.includes(searchTerm) ||
       ip.country?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -96,20 +106,32 @@ export default function BlockHistory() {
         </div>
       </div>
 
-      {/* Search */}
+      {/* Search and Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Search Blocked IPs</CardTitle>
+          <CardTitle>Search & Filter</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex items-center gap-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search IPs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="unique-ips"
+                checked={showUnique}
+                onCheckedChange={setShowUnique}
+              />
+              <Label htmlFor="unique-ips" className="cursor-pointer">
+                Show Unique IPs
+              </Label>
+            </div>
           </div>
         </CardContent>
       </Card>
