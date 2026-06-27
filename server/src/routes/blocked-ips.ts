@@ -3,7 +3,6 @@ import { db } from "../db/index.js";
 import { blockedIps } from "../db/schema/dashboard-schema.js";
 import { desc, eq, and, sql } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/auth-middleware.js";
-import { sendUnblockIp } from "src/services/blockService.js";
 
 const router = Router();
 
@@ -22,7 +21,7 @@ router.get("/", async (req: Request, res: Response) => {
   const offset = (page - 1) * limit;
 
   const filters: any[] = [];
-  
+
   if (req.query.agentId) {
     filters.push(eq(blockedIps.agentId, String(req.query.agentId)));
   }
@@ -143,34 +142,6 @@ router.delete("/:id", async (req: Request, res: Response) => {
     return res.status(404).json({ error: "Not found" });
   }
 
-  return res.json({ success: true });
-});
-
-/* -------------------------------------------------
-   POST /api/blocked-ips/:id/unblock
---------------------------------------------------- */
-router.post("/:id/unblock", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  if (Number.isNaN(id)) {
-    return res.status(400).json({ success: false, message: "Invalid ID" });
-  }
-
-  const row = await db
-    .select()
-    .from(blockedIps)
-    .where(eq(blockedIps.id, id))
-    .limit(1);
-
-  if (!row.length) {
-    return res.status(404).json({ success: false, message: "Not found" });
-  }
-
-  const agentId = row[0].agentId;
-  const ip = row[0].ip;
-  const ok = sendUnblockIp(agentId, ip);
-  if (!ok)
-    return res.status(409).json({ success: false, message: "Agent offline" });
   return res.json({ success: true });
 });
 

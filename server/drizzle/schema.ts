@@ -18,7 +18,7 @@ export const agents = pgTable("agents", {
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 });
 
-export const Session = pgTable("Session", {
+export const session = pgTable("session", {
 	id: text().primaryKey().notNull(),
 	expiresAt: timestamp("expires_at", { mode: 'string' }).notNull(),
 	token: text().notNull(),

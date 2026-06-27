@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
-import { users, Session } from "../db/schema/auth-schema.js";
+import { users, session } from "../db/schema/auth-schema.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -25,7 +25,7 @@ export const requireAuth = async (req: Request, res: Response, next: any) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const [sessionRecord] = await db.select().from(Session).where(eq(Session.token, token));
+  const [sessionRecord] = await db.select().from(session).where(eq(session.token, token));
   if (!sessionRecord || new Date(sessionRecord.expiresAt) < new Date()) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -70,7 +70,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
 
-    await db.insert(Session).values({
+    await db.insert(session).values({
       id: crypto.randomUUID(),
       userId: newUser.id,
       token,
@@ -114,7 +114,7 @@ router.post("/sign-in", async (req: Request, res: Response) => {
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
 
-    await db.insert(Session).values({
+    await db.insert(session).values({
       id: crypto.randomUUID(),
       userId: userRecord.id,
       token,
@@ -144,7 +144,7 @@ router.post("/sign-out", async (req: Request, res: Response) => {
     const token = cookies.session;
     
     if (token) {
-      await db.delete(Session).where(eq(Session.token, token));
+      await db.delete(session).where(eq(session.token, token));
     }
 
     res.clearCookie("session", { path: "/" });
@@ -164,7 +164,7 @@ router.get("/session", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const [sessionRecord] = await db.select().from(Session).where(eq(Session.token, token));
+    const [sessionRecord] = await db.select().from(session).where(eq(session.token, token));
     if (!sessionRecord || new Date(sessionRecord.expiresAt) < new Date()) {
       return res.status(401).json({ error: "Unauthorized" });
     }

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { db } from "../db/index.js";
-import { users, Session } from "../db/schema/auth-schema.js";
+import { users, session } from "../db/schema/auth-schema.js";
 import { eq } from "drizzle-orm";
 
 const parseCookies = (cookieHeader?: string) => {
@@ -29,7 +29,7 @@ export async function authMiddleware(
       });
     }
 
-    const [sessionRecord] = await db.select().from(Session).where(eq(Session.token, token));
+    const [sessionRecord] = await db.select().from(session).where(eq(session.token, token));
     if (!sessionRecord || new Date(sessionRecord.expiresAt) < new Date()) {
       return res.status(401).json({
         error: "Unauthorized",

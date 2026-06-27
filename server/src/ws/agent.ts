@@ -1,10 +1,10 @@
 import { WebSocket } from "ws";
 import { broadcastToDashboard } from "./dashboard.js";
-import { saveAlert } from "src/services/alertService.js";
-import { registerAgent, unregisterAgent } from "src/lib/wsRegistry.js";
-import { blockedIps } from "src/db/schema/dashboard-schema.js";
-import { agents } from "src/db/schema/agents.js";
-import { db } from "src/db/index.js";
+import { saveAlert } from "../services/alertService.js";
+import { registerAgent, unregisterAgent } from "../lib/wsRegistry.js";
+import { blockedIps } from "../db/schema/dashboard-schema.js";
+import { agents } from "../db/schema/agents.js";
+import { db } from "../db/index.js";
 import { eq, and } from "drizzle-orm";
 
 export async function handleAgentWS(ws: WebSocket, req: any) {

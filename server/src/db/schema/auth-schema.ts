@@ -13,8 +13,8 @@ export const users = pgTable("users", {
     .notNull(),
 });
 
-export const Session = pgTable(
-  "Session",
+export const session = pgTable(
+  "session",
   {
     id: text("id").primaryKey(),
     expiresAt: timestamp("expires_at").notNull(),
@@ -33,12 +33,12 @@ export const Session = pgTable(
 );
 
 export const userRelations = relations(users, ({ many }) => ({
-  sessions: many(Session),
+  sessions: many(session),
 }));
 
-export const sessionRelations = relations(Session, ({ one }) => ({
+export const sessionRelations = relations(session, ({ one }) => ({
   user: one(users, {
-    fields: [Session.userId],
+    fields: [session.userId],
     references: [users.id],
   }),
 }));
