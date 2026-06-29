@@ -2,7 +2,10 @@ import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
 import { agents } from "../db/schema/agents.js";
 import { desc, eq, sql } from "drizzle-orm";
-import { alerts as alertsTable, blockedIps as blockedIpsTable } from "../db/schema/dashboard-schema.js";
+import {
+  alerts as alertsTable,
+  blockedIps as blockedIpsTable,
+} from "../db/schema/dashboard-schema.js";
 
 // service functions (anggap sudah ada)
 import {
@@ -129,6 +132,19 @@ SERVER_URL=${baseUrl}
 # Optional:
 # SURIDASH_IPSET_NAME=suridash-blacklist
 # SURIDASH_BLOCK_TIMEOUT=3600
+
+# Auto-block: otomatis blokir IP dari Suricata alert
+SURIDASH_AUTO_BLOCK=false
+SURIDASH_AUTO_BLOCK_SEVERITY=2
+SURIDASH_AUTO_BLOCK_TIMEOUT=3600
+
+# Konfigurasi Deduplikasi Alert
+SURIDASH_DEDUP_BUCKET=20
+SURIDASH_DEDUP_TTL=25
+
+# Auto-block berdasarkan keyword serangan tertentu (pisahkan dengan koma)
+# Contoh: sql injection, xss, dos, web application attack
+SURIDASH_AUTO_BLOCK_KEYWORDS="sql injection,dos,xss,brute force"
 EOF
 
 # Optional: run setup firewall (ipset/iptables)
@@ -171,7 +187,6 @@ echo "➡️ Logs: journalctl -u suridash-agent -f"
   res.setHeader("Content-Type", "text/x-shellscript; charset=utf-8");
   return res.status(200).send(script);
 });
-
 
 /* =========================
  * HEARTBEAT
@@ -229,11 +244,13 @@ router.get("/:id", async (req: Request, res: Response) => {
 router.get("/:id/stats", async (req, res) => {
   const { id } = req.params;
 
-  const totalAlerts = await db.select({ count: sql<number>`count(*)` })
+  const totalAlerts = await db
+    .select({ count: sql<number>`count(*)` })
     .from(alertsTable)
     .where(eq(alertsTable.agentId, id));
 
-  const blockedIps = await db.select({ count: sql<number>`count(*)` })
+  const blockedIps = await db
+    .select({ count: sql<number>`count(*)` })
     .from(blockedIpsTable)
     .where(eq(blockedIpsTable.agentId, id));
 
@@ -263,7 +280,6 @@ router.get("/:id/alerts", async (req, res) => {
 
   res.json(rows);
 });
-
 
 /* =========================
  * UPDATE
