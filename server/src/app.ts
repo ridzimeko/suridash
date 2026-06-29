@@ -26,6 +26,6 @@ app.options("*", cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-console.log("origin url:", process.env.ORIGIN_URL);
+console.log("origin url:", process.env.ORIGINS_URLS);
 
 export default app;
