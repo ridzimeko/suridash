@@ -36,17 +36,22 @@ export async function notifyAll(alert: any) {
   }
 }
 
+function escapeMarkdown(text: any): string {
+  if (text === null || text === undefined) return "-";
+  return String(text).replace(/([_*\[`])/g, '\\$1');
+}
+
 function formatAlertMessage(alert: any, agent: any) {
   return `
 🚨 *Suricata Alert Detected*
 
-Agent : ${agent.name}
+Agent : ${escapeMarkdown(agent.name)}
 
-• Severity: *${alert.severity}*
-• Signature: ${alert.signature}
-• Category: ${alert.category}
-• Source IP: ${alert.srcIp}
-• Dest IP: ${alert.destIp}
-• Dest Port: ${alert.destPort ?? "-"}
+• Severity: *${escapeMarkdown(alert.severity)}*
+• Signature: ${escapeMarkdown(alert.signature)}
+• Category: ${escapeMarkdown(alert.category)}
+• Source IP: ${escapeMarkdown(alert.srcIp)}
+• Dest IP: ${escapeMarkdown(alert.destIp)}
+• Dest Port: ${escapeMarkdown(alert.destPort)}
 `.trim();
 }
