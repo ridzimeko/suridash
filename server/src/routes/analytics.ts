@@ -63,12 +63,12 @@ router.get("/attacks-by-category", async (req: Request, res: Response) => {
     const result = await db
       .select({
         category: alerts.category,
-        count: sql<number>`SUM(${alerts.alertCount})`,
+        count: sql<number>`count(${alerts.id})`,
       })
       .from(alerts)
       .where(agentFilter)
       .groupBy(alerts.category)
-      .orderBy(desc(sql`SUM(${alerts.alertCount})`));
+      .orderBy(desc(sql`count(${alerts.id})`));
 
     const totalCount = result.reduce((sum, item) => sum + Number(item.count), 0);
 
@@ -95,12 +95,12 @@ router.get("/top-attackers", async (req: Request, res: Response) => {
     const result = await db
       .select({
         srcIp: alerts.srcIp,
-        count: sql<number>`SUM(${alerts.alertCount})`,
+        count: sql<number>`count(${alerts.id})`,
       })
       .from(alerts)
       .where(agentFilter)
       .groupBy(alerts.srcIp)
-      .orderBy(desc(sql`SUM(${alerts.alertCount})`))
+      .orderBy(desc(sql`count(${alerts.id})`))
       .limit(10);
 
     res.json(result);
@@ -122,7 +122,7 @@ router.get("/attacks-timeline", async (req: Request, res: Response) => {
       SELECT
         TO_CHAR(date_trunc('hour', updated_at), 'HH24:MI') AS time,
         category,
-        SUM(alert_count) as count
+        count(*) as count
       FROM alerts
       WHERE 1=1 ${agentCondition}
       GROUP BY time, category

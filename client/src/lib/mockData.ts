@@ -19,7 +19,6 @@ export const mockAlerts: Alert[] = [
     longitude: 37.6173,
     blocked: true,
     createdAt: new Date(),
-    alertCount: 1,
   },
   {
     id: '2',
@@ -38,7 +37,6 @@ export const mockAlerts: Alert[] = [
     longitude: 116.4074,
     blocked: true,
     createdAt: new Date(),
-    alertCount: 1,
   },
   {
     id: '3',
@@ -57,7 +55,6 @@ export const mockAlerts: Alert[] = [
     longitude: 4.9041,
     blocked: true,
     createdAt: new Date(),
-    alertCount: 1,
   },
   {
     id: '4',
@@ -76,7 +73,6 @@ export const mockAlerts: Alert[] = [
     longitude: 30.5234,
     blocked: false,
     createdAt: new Date(),
-    alertCount: 1,
   },
   {
     id: '5',
@@ -95,7 +91,6 @@ export const mockAlerts: Alert[] = [
     longitude: -122.4194,
     blocked: false,
     createdAt: new Date(),
-    alertCount: 1,
   },
 ];
 

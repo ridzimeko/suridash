@@ -37,7 +37,6 @@ export const alerts = pgTable(
     signature: varchar("signature", { length: 512 }),
     category: varchar("category", { length: 256 }),
     severity: integer("severity"), // 1 (high) - 3 (low)
-    alertCount: integer("alert_count").default(1).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -48,14 +47,7 @@ export const alerts = pgTable(
     // Raw JSON dari Suricata event (opsional tapi berguna)
     raw: jsonb("raw"),
   },
-  (table) => ({
-    uniqueAlert: uniqueIndex("unique_alert_idx").on(
-      table.signatureId, // SID sebagai identifier
-      table.srcIp,
-      table.destIp,
-      table.protocol,
-    ),
-  }),
+  (table) => ({})
 );
 
 // 🔹 Riwayat IP yang diblokir firewall

@@ -22,7 +22,6 @@ export interface Alert {
   latitude: number;
   longitude: number;
   blocked: boolean;
-  alertCount: number;
 }
 
 export interface Rule {
@@ -66,7 +65,6 @@ export interface BlockedIP {
   reason: string;
   createdAt: Date;
   autoBlocked: boolean;
-  alertCount: number;
   isActive: boolean;
 }
 

@@ -45,24 +45,6 @@ export async function saveAlert(agentId: string, payload: any) {
   const [insertedAlert] = await db
     .insert(alerts)
     .values(alert)
-    .onConflictDoUpdate({
-      target: [
-        alerts.signatureId, // SID sebagai identifier utama
-        alerts.srcIp,
-        alerts.destIp,
-        alerts.protocol,
-      ],
-      set: {
-        // Update signature dan category dari rules terbaru
-        signature: payload.signature ?? "Unknown",
-        category: payload.category ?? "Uncategorized",
-        severity: payload.severity, // Update severity juga jika berubah
-        srcPort: payload.srcPort, // Perbarui ke port terakhir
-        destPort: payload.destPort, // Perbarui ke port terakhir
-        alertCount: sql`${alerts.alertCount} + 1`,
-        updatedAt: new Date(payload.timestamp),
-      },
-    })
     .returning();
 
   // Auto-block rules
@@ -72,7 +54,7 @@ export async function saveAlert(agentId: string, payload: any) {
   const now = Date.now();
   const FIFTEEN_MINUTES = 15 * 60 * 1000;
 
-  if (insertedAlert.alertCount === 1 || (now - lastNotified) > FIFTEEN_MINUTES) {
+  if ((now - lastNotified) > FIFTEEN_MINUTES) {
     console.log("Sending notifications for alert:", IP);
     notificationThrottle.set(throttleKey, now);
     
@@ -84,11 +66,5 @@ export async function saveAlert(agentId: string, payload: any) {
 
   console.log("alert triggered:", alert.srcIp, "severity:", alert.severity);
 
-  // If insertedAlert is undefined, it means conflict occurred (duplicate)
-  if (!insertedAlert) {
-    console.log("Duplicate alert skipped:", alert.srcIp);
-    return { existing: true, alert: null };
-  }
-
-  return { existing: false, alert };
+  return { existing: false, alert: insertedAlert };
 }

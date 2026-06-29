@@ -62,7 +62,7 @@ export async function handleAgentWS(ws: WebSocket, req: any) {
       if (msg.type === "suricata_alert") {
         const result = await saveAlert(agentId, msg.payload);
 
-        if (!result || result.existing) return;
+        // Always broadcast now since it's insert-only
 
         broadcastToDashboard({
           agentId,

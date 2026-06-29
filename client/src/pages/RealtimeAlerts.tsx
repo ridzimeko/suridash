@@ -167,13 +167,7 @@ const columns: ColumnDef<Alert>[] = [
             return a > b ? 1 : a < b ? -1 : 0;
         },
     },
-    {
-        accessorKey: 'alertCount',
-        header: 'Alerts Count',
-        cell: ({ row }) => (
-            <Badge variant="secondary">{row.getValue('alertCount')}</Badge>
-        ),
-    },
+
 ];
 
 export default function RealtimeAlerts() {
