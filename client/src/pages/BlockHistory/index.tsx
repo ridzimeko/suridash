@@ -4,8 +4,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+// import { Switch } from '@/components/ui/switch';
+// import { Label } from '@/components/ui/label';
 
 import {
   Table, TableBody, TableCell,
@@ -33,6 +33,7 @@ export default function BlockHistory() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIP] = useState<BlockedIP|null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showUnique, setShowUnique] = useState(true);
 
   // Apply unique filter if enabled
@@ -122,7 +123,7 @@ export default function BlockHistory() {
                 className="pl-10"
               />
             </div>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Switch
                 id="unique-ips"
                 checked={showUnique}
@@ -131,7 +132,7 @@ export default function BlockHistory() {
               <Label htmlFor="unique-ips" className="cursor-pointer">
                 Show Unique IPs
               </Label>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>
