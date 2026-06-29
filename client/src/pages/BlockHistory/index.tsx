@@ -33,8 +33,7 @@ export default function BlockHistory() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIP] = useState<BlockedIP|null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [showUnique, setShowUnique] = useState(true);
+  const [showUnique] = useState(true);
 
   // Apply unique filter if enabled
   const processedIPs = showUnique
