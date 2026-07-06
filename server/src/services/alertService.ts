@@ -1,6 +1,7 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { alerts, blockedIps } from "../db/schema/dashboard-schema.js";
+import { agents } from "../db/schema/agents.js";
 import { notifyAll } from "./notificationService.js";
 
 const notificationThrottle = new Map<string, number>();
@@ -64,7 +65,15 @@ export async function saveAlert(agentId: string, payload: any) {
   }
   // }
 
-  console.log("alert triggered:", alert.srcIp, "severity:", alert.severity);
+  const [agent] = await db
+    .select({ name: agents.name })
+    .from(agents)
+    .where(eq(agents.id, agentId))
+    .limit(1);
+
+  const agentName = agent?.name ?? "Unknown Agent";
+
+  console.log("alert triggered:", alert.srcIp, "severity:", alert.severity, "signature:", alert.signature, "agent:", agentName);
 
   return { existing: false, alert: insertedAlert };
 }

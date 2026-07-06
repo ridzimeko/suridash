@@ -14,27 +14,36 @@ type TelegramConfig = {
   chat_id?: string;
 };
 
-export async function sendTelegram({ message, parse_mode = 'HTML' }: TelegramParams, isTest = false) {
-  const [tg] = await db
-    .select()
-    .from(integrations)
-    .where(eq(integrations.provider, "telegram"));
-  
-  const config : TelegramConfig = tg?.config || {};
+export async function sendTelegram({ message, parse_mode = 'HTML', chat_id, bot_token }: TelegramParams, isTest = false) {
+  let finalBotToken = bot_token;
+  let finalChatId = chat_id;
 
-  if (!tg?.enabled && !isTest) return;
-  const bot_token = config.bot_token;
-  if (!bot_token) throw new Error("Telegram bot token not configured");
+  if (!finalBotToken || !finalChatId) {
+    const [tg] = await db
+      .select()
+      .from(integrations)
+      .where(eq(integrations.provider, "telegram"));
+    
+    const config : TelegramConfig = tg?.config || {};
 
-  const chatIds = config.chat_id
-    ? config.chat_id.split(",").map((id) => id.trim()).filter(Boolean)
+    if (!tg?.enabled && !isTest) return;
+    
+    if (!finalBotToken) finalBotToken = config.bot_token;
+    if (!finalChatId) finalChatId = config.chat_id;
+  }
+
+  if (!finalBotToken) throw new Error("Telegram bot token not configured");
+
+  const chatIds = finalChatId
+    ? finalChatId.split(",").map((id) => id.trim()).filter(Boolean)
     : [];
 
   if (chatIds.length === 0) throw new Error("Telegram chat ID not configured");
 
-  const results = await Promise.allSettled(
-    chatIds.map(async (chat_id) => {
-      const res = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
+  const results: PromiseSettledResult<any>[] = [];
+  for (const chat_id of chatIds) {
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${finalBotToken}/sendMessage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -46,16 +55,31 @@ export async function sendTelegram({ message, parse_mode = 'HTML' }: TelegramPar
 
       if (!res.ok) {
         const err = await res.text();
-        throw new Error(`Failed to send to ${chat_id}: ${err}`);
+        results.push({ status: "rejected", reason: new Error(`Failed to send to ${chat_id}: ${err}`) });
+      } else {
+        results.push({ status: "fulfilled", chat_id, value: await res.json() } as any);
       }
-    })
-  );
+    } catch (e: any) {
+      results.push({ status: "rejected", reason: new Error(`Failed to send to ${chat_id}: ${e.message}`) });
+    }
+  }
 
   const errors = results
     .filter((r) => r.status === "rejected")
     .map((r: any) => r.reason.message);
 
   if (errors.length > 0) {
-    throw new Error(`Telegram error(s): ${errors.join(" | ")}`);
+    console.error(`Telegram warning/error: ${errors.join(" | ")}`);
+    
+    // Jika semua pengiriman gagal, baru kita throw error
+    if (errors.length === chatIds.length) {
+      throw new Error(`Failed to send to all Telegram chats: ${errors.join(" | ")}`);
+    }
   }
+
+  const successfulChats = results
+    .filter((r: any) => r.status === "fulfilled")
+    .map((r: any) => r.chat_id);
+
+  return { chatIds: successfulChats };
 }

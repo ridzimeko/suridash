@@ -27,8 +27,10 @@ export async function notifyAll(alert: any) {
     // send telegram
     if (provider === "telegram") {
       try {
-        await sendTelegram({ message, parse_mode: "Markdown" });
-        console.log("Telegram sent");
+        const res = await sendTelegram({ message, parse_mode: "Markdown" });
+        if (res?.chatIds?.length) {
+          console.log(`Telegram sent to: ${res.chatIds.join(", ")}`);
+        }
       } catch (e: any) {
         console.error("Telegram notification failed:", e.message);
       }
