@@ -3,7 +3,6 @@ import { db } from "../db/index.js";
 import { notifications } from "../db/schema/dashboard-schema.js";
 import { eq, desc } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/auth-middleware.js";
-import { sendEmailBrevo } from "../services/emailService.js";
 import { sendTelegram } from "../services/telegramService.js";
 
 const router = Router();
@@ -70,7 +69,7 @@ router.post("/", async (req: Request, res: Response) => {
       })
       .where(eq(notifications.id, existing[0].id))
       .returning();
-      
+
     return res.status(200).json({ success: true, data: updated });
   }
 
@@ -138,25 +137,25 @@ router.post("/test", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "provider and config required" });
   }
 
-  if (provider === "brevo") {
-    await sendEmailBrevo(
-      {
-        to: config.emailTo,
-        subject: "Test Email from SuriDash",
-        html: "<b>It's work! This is a test email sent from SuriDash.</b>",
-      },
-      true
-    );
+  // if (provider === "brevo") {
+  //   await sendEmailBrevo(
+  //     {
+  //       to: config.emailTo,
+  //       subject: "Test Email from SuriDash",
+  //       html: "<b>It's work! This is a test email sent from SuriDash.</b>",
+  //     },
+  //     true
+  //   );
 
-    return res.json({ message: "Test email sent!" });
-  }
+  //   return res.json({ message: "Test email sent!" });
+  // }
 
   if (provider === "telegram") {
     await sendTelegram(
       {
         message: "Test message from SuriDash via Telegram!",
       },
-      true
+      true,
     );
 
     return res.json({ message: "Test Telegram sent!" });

@@ -9,8 +9,6 @@ export default function Routes() {
     const RealtimeAlerts = React.lazy(() => import('@/pages/RealtimeAlerts'));
     const ChartsAnalytics = React.lazy(() => import('@/pages/ChartsAnalytics'));
     const BlockHistory = React.lazy(() => import('@/pages/BlockHistory'));
-    const SystemLogs = React.lazy(() => import('@/pages/SystemLogs'));
-    const Settings = React.lazy(() => import('@/pages/Settings'));
     const Integration = React.lazy(() => import('@/pages/Integration'));
     const AgentManagement = React.lazy(() => import('@/pages/AgentManagement'));
     // const LoginPage = React.lazy(() => import('@/pages/Login'));
@@ -22,8 +20,6 @@ export default function Routes() {
                 <Route path="/realtime-alerts" element={<RealtimeAlerts />} />
                 <Route path="/charts-analytics" element={<ChartsAnalytics />} />
                 <Route path="/block-history" element={<BlockHistory />} />
-                <Route path="/system-logs" element={<SystemLogs />} />
-                <Route path="/settings" element={<Settings />} />
                 <Route path="/notification" element={<Integration />} />
                 <Route path="/agents" element={<AgentManagement />} />
             </Route>
