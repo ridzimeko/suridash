@@ -1,11 +1,11 @@
 import { sendTelegram } from "./telegramService.js";
 import { db } from "../db/index.js";
-import { integrations } from "../db/schema/dashboard-schema.js";
+import { notifications } from "../db/schema/dashboard-schema.js";
 import { agents } from "../db/schema/agents.js";
 import { eq } from "drizzle-orm";
 
 export async function notifyAll(alert: any) {
-  const configs = await db.select().from(integrations);
+  const configs = await db.select().from(notifications);
   const agent = await db
     .select()
     .from(agents)

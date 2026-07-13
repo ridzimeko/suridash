@@ -72,7 +72,7 @@ export const blockedIps = pgTable(
   }),
 );
 
-export const integrations = pgTable("integrations", {
+export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
 
   // email | telegram | slack | discord | whatsapp

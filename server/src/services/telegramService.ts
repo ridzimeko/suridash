@@ -1,5 +1,5 @@
 import { db } from "../db/index.js";
-import { integrations } from "../db/schema/dashboard-schema.js";
+import { notifications } from "../db/schema/dashboard-schema.js";
 import { eq } from "drizzle-orm";
 
 type TelegramParams = {
@@ -21,8 +21,8 @@ export async function sendTelegram({ message, parse_mode = 'HTML', chat_id, bot_
   if (!finalBotToken || !finalChatId) {
     const [tg] = await db
       .select()
-      .from(integrations)
-      .where(eq(integrations.provider, "telegram"));
+      .from(notifications)
+      .where(eq(notifications.provider, "telegram"));
     
     const config : TelegramConfig = tg?.config || {};
 

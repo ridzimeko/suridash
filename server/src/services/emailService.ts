@@ -1,5 +1,5 @@
 import { db } from "../db/index.js";
-import { integrations } from "../db/schema/dashboard-schema.js";
+import { notifications } from "../db/schema/dashboard-schema.js";
 import { eq } from "drizzle-orm";
 
 type EmailParams = {
@@ -18,8 +18,8 @@ export async function sendEmailBrevo({ to, subject, html }: EmailParams, isTest 
   // Ambil config integrasi dari database
   const [brevo] = await db
     .select()
-    .from(integrations)
-    .where(eq(integrations.provider, "brevo"));
+    .from(notifications)
+    .where(eq(notifications.provider, "brevo"));
 
   if (!brevo?.enabled && !isTest) return;
 

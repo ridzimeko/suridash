@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
-import { integrations } from "../db/schema/dashboard-schema.js";
+import { notifications } from "../db/schema/dashboard-schema.js";
 import { eq, desc } from "drizzle-orm";
 import { authMiddleware } from "../middlewares/auth-middleware.js";
 import { sendEmailBrevo } from "../services/emailService.js";
@@ -20,8 +20,8 @@ router.use(authMiddleware);
 router.get("/", async (_req: Request, res: Response) => {
   const result = await db
     .select()
-    .from(integrations)
-    .orderBy(desc(integrations.id));
+    .from(notifications)
+    .orderBy(desc(notifications.id));
 
   return res.json(result);
 });
@@ -37,8 +37,8 @@ router.get("/:id", async (req: Request, res: Response) => {
 
   const data = await db
     .select()
-    .from(integrations)
-    .where(eq(integrations.id, id));
+    .from(notifications)
+    .where(eq(notifications.id, id));
 
   return res.json(data[0] ?? null);
 });
@@ -56,26 +56,26 @@ router.post("/", async (req: Request, res: Response) => {
   // Check if provider already exists
   const existing = await db
     .select()
-    .from(integrations)
-    .where(eq(integrations.provider, body.provider))
+    .from(notifications)
+    .where(eq(notifications.provider, body.provider))
     .limit(1);
 
   if (existing.length > 0) {
     const [updated] = await db
-      .update(integrations)
+      .update(notifications)
       .set({
         config: body.config,
         enabled: body.enabled ?? true,
         updatedAt: new Date(),
       })
-      .where(eq(integrations.id, existing[0].id))
+      .where(eq(notifications.id, existing[0].id))
       .returning();
       
     return res.status(200).json({ success: true, data: updated });
   }
 
   const [inserted] = await db
-    .insert(integrations)
+    .insert(notifications)
     .values({
       provider: body.provider,
       config: body.config,
@@ -98,14 +98,14 @@ router.put("/:id", async (req: Request, res: Response) => {
   const body = req.body;
 
   const updated = await db
-    .update(integrations)
+    .update(notifications)
     .set({
       provider: body.provider,
       config: body.config,
       enabled: body.enabled,
       updatedAt: new Date(),
     })
-    .where(eq(integrations.id, id))
+    .where(eq(notifications.id, id))
     .returning();
 
   if (!updated.length) {
@@ -124,7 +124,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid ID" });
   }
 
-  await db.delete(integrations).where(eq(integrations.id, id));
+  await db.delete(notifications).where(eq(notifications.id, id));
   return res.json({ success: true });
 });
 
