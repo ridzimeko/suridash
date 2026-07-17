@@ -11,16 +11,6 @@ import { toast } from 'sonner';
 import { getIntegrations, saveIntegration, testIntegration } from "@/services/integration";
 
 export default function Integration() {
-  const [emailConfig, setEmailConfig] = useState({
-    enabled: false,
-    config: {
-      apiKey: "",
-      fromEmail: "",
-      fromName: "",
-      toEmail: "",
-    }
-  });
-
   const [telegramConfig, setTelegramConfig] = useState({
     enabled: false,
     config: {
@@ -29,7 +19,6 @@ export default function Integration() {
     }
   });
 
-  const [emailId, setEmailId] = useState<number | null>(null);
   const [telegramId, setTelegramId] = useState<number | null>(null);
 
   /* ----------------------------------------------
@@ -38,14 +27,6 @@ export default function Integration() {
   useEffect(() => {
     getIntegrations().then((data) => {
       data.forEach((row) => {
-        if (row.provider === "brevo") {
-          setEmailId(row.id);
-          setEmailConfig({
-            enabled: row.enabled,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            config: row.config as any,
-          });
-        }
 
         if (row.provider === "telegram") {
           setTelegramId(row.id);
@@ -64,13 +45,6 @@ export default function Integration() {
   ------------------------------------------------*/
   const handleSave = async () => {
     try {
-      await saveIntegration(
-        "brevo",
-        emailConfig.config,
-        emailConfig.enabled,
-        emailId ?? undefined
-      );
-
       await saveIntegration(
         "telegram",
         telegramConfig.config,
@@ -92,9 +66,7 @@ export default function Integration() {
     toast.loading("Testing...");
 
     try {
-      const config = provider === "brevo" ? {
-        emailTo: emailConfig.config.toEmail
-      } : {
+      const config = {
         bot_token: telegramConfig.config.bot_token,
         chat_id: telegramConfig.config.chat_id
       };

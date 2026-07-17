@@ -86,15 +86,9 @@ export default function AgentsPage() {
    * LOAD AGENTS
    * ======================= */
   useEffect(() => {
-    let cancelled = false;
-
     (async () => {
-      if (!cancelled) await loadAgents();
+      await loadAgents();
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, [loadAgents]);
 
   /* =======================
